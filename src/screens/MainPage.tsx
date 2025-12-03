@@ -140,10 +140,6 @@ const MainPage: React.FC<MainPageProps> = ({ navigation }) => {
     console.log('Mode switch pressed');
   };
 
-  const handleProfilePress = () => {
-    navigation.navigate('Profile');
-  };
-
   return (
     <View style={styles.container}>
       {/* Logo Small */}
@@ -159,11 +155,7 @@ const MainPage: React.FC<MainPageProps> = ({ navigation }) => {
       <Text style={styles.title}>Bukkumeito</Text>
 
       {/* Profile Picture */}
-      <TouchableOpacity
-        style={styles.profilePictureContainer}
-        onPress={handleProfilePress}
-        activeOpacity={0.7}
-      >
+      <View style={styles.profilePictureContainer}>
         <Image
           source={
             profileImage
@@ -173,7 +165,7 @@ const MainPage: React.FC<MainPageProps> = ({ navigation }) => {
           style={styles.profilePicture}
           resizeMode="cover"
         />
-      </TouchableOpacity>
+      </View>
 
       {/* Mode Switch - Your Collection */}
       <TouchableOpacity

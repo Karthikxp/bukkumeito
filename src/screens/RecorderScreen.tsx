@@ -188,10 +188,6 @@ const RecorderScreen: React.FC<RecorderScreenProps> = ({ navigation, route }) =>
     navigation.goBack();
   };
 
-  const handleProfilePress = () => {
-    navigation.navigate('Profile');
-  };
-
   const handleShareEntry = () => {
     // TODO: Implement share functionality
     console.log('Share entry pressed');
@@ -226,11 +222,7 @@ const RecorderScreen: React.FC<RecorderScreenProps> = ({ navigation, route }) =>
         <Text style={styles.title}>Bukkumeito</Text>
 
         {/* Profile Picture */}
-        <TouchableOpacity
-          style={styles.profilePictureContainer}
-          onPress={handleProfilePress}
-          activeOpacity={0.7}
-        >
+        <View style={styles.profilePictureContainer}>
           <Image
             source={
               profileImage
@@ -240,7 +232,7 @@ const RecorderScreen: React.FC<RecorderScreenProps> = ({ navigation, route }) =>
             style={styles.profilePicture}
             resizeMode="cover"
           />
-        </TouchableOpacity>
+        </View>
 
         {/* Back Button with My Notes */}
         <TouchableOpacity

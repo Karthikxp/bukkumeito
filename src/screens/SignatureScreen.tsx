@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Alert,
+  Animated,
 } from 'react-native';
 import SignatureCanvas from 'react-native-signature-canvas';
 import type { StackNavigationProp } from '@react-navigation/stack';
@@ -30,6 +31,7 @@ const SignatureScreen: React.FC<SignatureScreenProps> = ({ navigation }) => {
   const [hasSignature, setHasSignature] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [existingSignature, setExistingSignature] = useState(false);
+  const shakeAnimation = useRef(new Animated.Value(0)).current;
 
   // Load existing signature on mount
   useEffect(() => {
@@ -42,11 +44,45 @@ const SignatureScreen: React.FC<SignatureScreenProps> = ({ navigation }) => {
     loadExistingSignature();
   }, []);
 
+  const triggerShake = () => {
+    // Reset animation
+    shakeAnimation.setValue(0);
+    
+    // Shake animation sequence
+    Animated.sequence([
+      Animated.timing(shakeAnimation, {
+        toValue: 10,
+        duration: 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnimation, {
+        toValue: -10,
+        duration: 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnimation, {
+        toValue: 10,
+        duration: 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnimation, {
+        toValue: -10,
+        duration: 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnimation, {
+        toValue: 0,
+        duration: 50,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
   const handleConfirm = () => {
     if (signatureRef.current && hasSignature) {
       signatureRef.current.readSignature();
     } else if (!hasSignature) {
-      Alert.alert('No Signature', 'Please add your signature before confirming.');
+      triggerShake();
     }
   };
 
@@ -174,7 +210,14 @@ const SignatureScreen: React.FC<SignatureScreenProps> = ({ navigation }) => {
       )}
 
       {/* Confirm Sign Button - positioned at bottom: 55px, centered */}
-      <View style={styles.buttonContainer}>
+      <Animated.View 
+        style={[
+          styles.buttonContainer,
+          {
+            transform: [{ translateX: shakeAnimation }],
+          },
+        ]}
+      >
         <TouchableOpacity 
           style={[styles.button, isSaving && styles.buttonDisabled]}
           onPress={handleConfirm}
@@ -185,7 +228,7 @@ const SignatureScreen: React.FC<SignatureScreenProps> = ({ navigation }) => {
             {isSaving ? 'Saving...' : 'Confirm Sign'}
           </Text>
         </TouchableOpacity>
-      </View>
+      </Animated.View>
     </View>
   );
 };
