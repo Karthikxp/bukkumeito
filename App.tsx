@@ -18,19 +18,21 @@ function App(): React.JSX.Element {
       
       {/* Logo - ShapeLax Animation */}
       <View style={styles.logoContainer}>
-        <WebView
-          source={{ uri: 'https://davvcdn.lon1.cdn.digitaloceanspaces.com/6a35f22287536191e502392b00ce6431/fa3b59e36cc29a4ecd99.html' }}
-          style={styles.logo}
-          javaScriptEnabled={true}
-          domStorageEnabled={true}
-          originWhitelist={['*']}
-          scrollEnabled={false}
-          showsVerticalScrollIndicator={false}
-          showsHorizontalScrollIndicator={false}
-          automaticallyAdjustContentInsets={false}
-          bounces={false}
-          allowsInlineMediaPlayback={true}
-        />
+        <View style={styles.logoWrapper}>
+          <WebView
+            source={{ uri: 'https://davvcdn.lon1.cdn.digitaloceanspaces.com/6a35f22287536191e502392b00ce6431/fa3b59e36cc29a4ecd99.html' }}
+            style={styles.logo}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            originWhitelist={['*']}
+            scrollEnabled={false}
+            showsVerticalScrollIndicator={false}
+            showsHorizontalScrollIndicator={false}
+            automaticallyAdjustContentInsets={false}
+            bounces={false}
+            allowsInlineMediaPlayback={true}
+          />
+        </View>
       </View>
       
       {/* Tagline */}
@@ -63,10 +65,18 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     position: 'absolute',
-    left: (width - 250) / 2,
+    left: (width - 182) / 2,
     top: height * 0.3571 + 23.29,
+    width: 182,
+    height: 182.3,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logoWrapper: {
     width: 250,
-    height: 350,
+    height: 250,
+    transform: [{ scale: 0.728 }],
   },
   logo: {
     width: 250,
