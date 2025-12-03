@@ -18,9 +18,7 @@ type IntroScreenProps = {
 
 const IntroScreen: React.FC<IntroScreenProps> = ({ navigation }) => {
   const handleEnterSetup = () => {
-    // TODO: Navigate to main app when ready
-    // navigation.navigate('Main');
-    console.log('Enter Setup pressed');
+    navigation.navigate('Profile');
   };
 
   return (
