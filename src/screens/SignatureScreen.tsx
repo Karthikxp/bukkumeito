@@ -42,10 +42,13 @@ const SignatureScreen: React.FC<SignatureScreenProps> = ({ navigation }) => {
     setHasSignature(false);
   };
 
-  const handleClear = () => {
+  const handleClearPress = () => {
     if (signatureRef.current) {
       signatureRef.current.clearSignature();
     }
+  };
+
+  const handleClear = () => {
     setHasSignature(false);
   };
 
@@ -119,7 +122,7 @@ const SignatureScreen: React.FC<SignatureScreenProps> = ({ navigation }) => {
       {hasSignature && (
         <TouchableOpacity 
           style={styles.clearButton}
-          onPress={handleClear}
+          onPress={handleClearPress}
           activeOpacity={0.7}
         >
           <Text style={styles.clearText}>Clear</Text>
@@ -184,7 +187,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: width * 0.2917 - 74,
     top: height * 0.3571 + (height * 0.0141),
-    width: 175,
+    width: 175
+
   },
   helpText: {
     fontSize: 9,
