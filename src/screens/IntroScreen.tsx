@@ -1,0 +1,147 @@
+/**
+ * IntroScreen - Welcome/Intro Screen with ShapeLax Animation
+ * 
+ * @format
+ */
+
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { WebView } from 'react-native-webview';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import type { RootStackParamList } from '../navigation/RootNavigator';
+
+const { width, height } = Dimensions.get('window');
+
+type IntroScreenProps = {
+  navigation: StackNavigationProp<RootStackParamList, 'Intro'>;
+};
+
+const IntroScreen: React.FC<IntroScreenProps> = ({ navigation }) => {
+  const handleEnterSetup = () => {
+    // TODO: Navigate to main app when ready
+    // navigation.navigate('Main');
+    console.log('Enter Setup pressed');
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Title */}
+      <Text style={styles.title}>Bukkumeito</Text>
+      
+      {/* Logo - ShapeLax Animation */}
+      <View style={styles.logoContainer} pointerEvents="none">
+        <View style={styles.logoWrapper}>
+          <WebView
+            source={{ uri: 'https://davvcdn.lon1.cdn.digitaloceanspaces.com/6a35f22287536191e502392b00ce6431/fa3b59e36cc29a4ecd99.html' }}
+            style={styles.logo}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            originWhitelist={['*']}
+            scrollEnabled={false}
+            showsVerticalScrollIndicator={false}
+            showsHorizontalScrollIndicator={false}
+            automaticallyAdjustContentInsets={false}
+            bounces={false}
+            allowsInlineMediaPlayback={true}
+            scalesPageToFit={false}
+            allowsLinkPreview={false}
+            injectedJavaScript={`
+              const meta = document.createElement('meta');
+              meta.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
+              meta.setAttribute('name', 'viewport');
+              document.getElementsByTagName('head')[0].appendChild(meta);
+              
+              document.addEventListener('gesturestart', function(e) {
+                e.preventDefault();
+              });
+              document.addEventListener('touchmove', function(e) {
+                if (e.scale !== 1) { e.preventDefault(); }
+              }, { passive: false });
+            `}
+          />
+        </View>
+      </View>
+      
+      {/* Tagline */}
+      <Text style={styles.tagline}>Books, your way</Text>
+      
+      {/* Enter Setup Button */}
+      <TouchableOpacity style={styles.button} activeOpacity={0.8} onPress={handleEnterSetup}>
+        <Text style={styles.buttonText}>Enter Setup</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    position: 'relative',
+  },
+  title: {
+    position: 'absolute',
+    width: '100%',
+    top: height * 0.2143 + 23.57,
+    fontSize: 34.435,
+    fontWeight: '700',
+    color: '#000000',
+    letterSpacing: -2.4104,
+    fontFamily: 'Inter',
+    textAlign: 'center',
+  },
+  logoContainer: {
+    position: 'absolute',
+    left: (width - 182) / 2,
+    top: height * 0.3571 + 23.29,
+    width: 182,
+    height: 182.3,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logoWrapper: {
+    width: 250,
+    height: 250,
+    transform: [{ scale: 0.728 }],
+  },
+  logo: {
+    width: 250,
+    height: 250,
+    backgroundColor: 'transparent',
+  },
+  tagline: {
+    position: 'absolute',
+    width: '100%',
+    top: height * 0.7143 - 0.43,
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#000000',
+    letterSpacing: -1.26,
+    fontFamily: 'General Sans',
+    textAlign: 'center',
+  },
+  button: {
+    position: 'absolute',
+    left: '50%',
+    top: height * 0.7857 + 56.43,
+    width: 266,
+    height: 60,
+    backgroundColor: '#000000',
+    borderRadius: 97,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+    transform: [{ translateX: -133 }],
+  },
+  buttonText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#ffffff',
+    letterSpacing: -1.26,
+    fontFamily: 'Inter',
+  },
+});
+
+export default IntroScreen;
+
