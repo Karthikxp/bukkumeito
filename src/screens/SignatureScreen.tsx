@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: '#000000',
-    letterSpacing: -1.4,
+    letterSpacing: -1,
     fontFamily: 'Inter',
   },
 });

@@ -111,18 +111,14 @@ const AchievementShowScreen: React.FC<AchievementShowScreenProps> = ({ navigatio
         <Text style={styles.boskaHeadingRight}>and much more</Text>
       </View>
 
-      {/* Final Button with Cat Image - positioned at bottom */}
-      <View style={styles.finalButtonContainer}>
+      {/* Complete Setup Button - positioned at bottom */}
+      <View style={styles.buttonContainer}>
         <TouchableOpacity 
-          style={styles.finalButton}
+          style={styles.button}
           onPress={handleStartReading}
           activeOpacity={0.8}
         >
-          <Image 
-            source={require('../../Asset/ui/cat_button.png')}
-            style={styles.catIcon}
-            resizeMode="contain"
-          />
+          <Text style={styles.buttonText}>Complete Setup</Text>
         </TouchableOpacity>
       </View>
 
@@ -247,34 +243,41 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter',
     lineHeight: 10.91,
   },
-  finalButtonContainer: {
+  buttonContainer: {
     position: 'absolute',
-    left: width * 0.0833,
-    top: height * 0.7857 + (height * 0.0456),
-    width: 300,
-    height: 94,
+    left: 0,
+    right: 0,
+    bottom: 55,
+    alignItems: 'center',
   },
-  finalButton: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#000000',
+  button: {
+    width: 191,
+    height: 60,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#000000',
     borderRadius: 200,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  catIcon: {
-    width: 60,
-    height: 60,
+  buttonText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#000000',
+    letterSpacing: -1,
+    fontFamily: 'Inter',
   },
   finalText: {
     position: 'absolute',
-    left: width * 0.4583 - 54,
+    left: 0,
+    right: 0,
     top: height * 0.9286 + (height * 0.0352),
     fontSize: 9,
     fontWeight: '300',
     color: '#000000',
-    letterSpacing: -0.63,
+    lineHeight: 10.91,
     fontFamily: 'Inter',
+    textAlign: 'center',
   },
 });
 
