@@ -4,8 +4,20 @@
  * @format
  */
 
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Dimensions } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  Image, 
+  TouchableOpacity, 
+  TextInput, 
+  Dimensions,
+  Animated,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 import CameraModal from '../components/CameraModal';
@@ -20,6 +32,69 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const [username, setUsername] = useState('Franz Hermann');
   const [cameraVisible, setCameraVisible] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  
+  const inputContainerPosition = useRef(new Animated.Value(0)).current;
+  const cursorOpacity = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    // Blinking cursor animation
+    const blinkAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(cursorOpacity, {
+          toValue: 0,
+          duration: 530,
+          useNativeDriver: true,
+        }),
+        Animated.timing(cursorOpacity, {
+          toValue: 1,
+          duration: 530,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    if (isFocused) {
+      blinkAnimation.start();
+    } else {
+      blinkAnimation.stop();
+      cursorOpacity.setValue(0);
+    }
+
+    return () => blinkAnimation.stop();
+  }, [isFocused]);
+
+  useEffect(() => {
+    const keyboardWillShow = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => {
+        setIsKeyboardVisible(true);
+        Animated.spring(inputContainerPosition, {
+          toValue: -e.endCoordinates.height + 100,
+          useNativeDriver: true,
+          friction: 8,
+        }).start();
+      }
+    );
+
+    const keyboardWillHide = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        setIsKeyboardVisible(false);
+        Animated.spring(inputContainerPosition, {
+          toValue: 0,
+          useNativeDriver: true,
+          friction: 8,
+        }).start();
+      }
+    );
+
+    return () => {
+      keyboardWillShow.remove();
+      keyboardWillHide.remove();
+    };
+  }, []);
 
   const handleFindFriends = () => {
     // TODO: Navigate to friends screen
@@ -44,7 +119,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       {/* Logo Small */}
       <View style={styles.logoSmallContainer}>
         <Image 
@@ -86,16 +164,39 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       </TouchableOpacity>
 
       {/* Username Input Box */}
-      <View style={styles.usernameBox}>
+      <Animated.View 
+        style={[
+          styles.usernameBox,
+          {
+            transform: [{ translateY: inputContainerPosition }],
+          },
+          isKeyboardVisible && styles.usernameBoxElevated,
+        ]}
+      >
         <TextInput
           style={styles.usernameInput}
           value={username}
           onChangeText={setUsername}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
           placeholder="Your Name"
-          placeholderTextColor="#999"
+          placeholderTextColor="#999999"
+          autoCorrect={false}
+          autoCapitalize="words"
+          returnKeyType="done"
+          selectionColor="#000000"
+          caretHidden={true}
+          maxLength={30}
         />
-        <View style={styles.indicator} />
-      </View>
+        {isFocused && (
+          <Animated.View 
+            style={[
+              styles.blinkingCursor,
+              { opacity: cursorOpacity }
+            ]} 
+          />
+        )}
+      </Animated.View>
 
       {/* Username Help Text */}
       <Text style={styles.usernameHelpText}>
@@ -134,7 +235,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         onClose={handleCameraClose}
         onCapture={handlePhotoCapture}
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -224,8 +325,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 73,
-    paddingVertical: 19,
+    paddingHorizontal: 20,
+    paddingVertical: 0,
+    overflow: 'visible',
+  },
+  usernameBoxElevated: {
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   usernameInput: {
     fontSize: 18,
@@ -235,12 +344,16 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter',
     flex: 1,
     textAlign: 'center',
+    paddingVertical: 0,
+    paddingHorizontal: 5,
+    height: 60,
+    lineHeight: 22,
   },
-  indicator: {
-    width: 1,
-    height: 34,
+  blinkingCursor: {
+    width: 2,
+    height: 24,
     backgroundColor: '#000000',
-    marginLeft: 10,
+    marginLeft: 2,
   },
   usernameHelpText: {
     position: 'absolute',
