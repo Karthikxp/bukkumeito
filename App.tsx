@@ -5,7 +5,8 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { WebView } from 'react-native-webview';
 
 const { width, height } = Dimensions.get('window');
 
@@ -15,12 +16,20 @@ function App(): React.JSX.Element {
       {/* Title */}
       <Text style={styles.title}>Bukkumeito</Text>
       
-      {/* Logo */}
+      {/* Logo - ShapeLax Animation */}
       <View style={styles.logoContainer}>
-        <Image 
-          source={require('./Asset/ui/logo.png')}
+        <WebView
+          source={{ uri: 'https://davvcdn.lon1.cdn.digitaloceanspaces.com/6a35f22287536191e502392b00ce6431/fa3b59e36cc29a4ecd99.html' }}
           style={styles.logo}
-          resizeMode="contain"
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          originWhitelist={['*']}
+          scrollEnabled={false}
+          showsVerticalScrollIndicator={false}
+          showsHorizontalScrollIndicator={false}
+          automaticallyAdjustContentInsets={false}
+          bounces={false}
+          allowsInlineMediaPlayback={true}
         />
       </View>
       
@@ -54,14 +63,15 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     position: 'absolute',
-    left: (width - 180) / 2,
+    left: (width - 250) / 2,
     top: height * 0.3571 + 23.29,
-    width: 180,
-    height: 182.304,
+    width: 250,
+    height: 350,
   },
   logo: {
-    width: '100%',
-    height: '100%',
+    width: 250,
+    height: 250,
+    backgroundColor: 'transparent',
   },
   tagline: {
     position: 'absolute',
