@@ -21,7 +21,7 @@ import type { RootStackParamList } from '../navigation/RootNavigator';
 const { width, height } = Dimensions.get('window');
 const CARD_WIDTH = 300;
 const CARD_HEIGHT = 457;
-const SWIPE_THRESHOLD = width * 0.25;
+const SWIPE_THRESHOLD = 100; // User must swipe at least 100px to trigger card change
 
 type Friend = {
   id: number;
@@ -75,31 +75,44 @@ const FriendsTrackScreen: React.FC<FriendsTrackScreenProps> = ({ navigation }) =
   const [currentIndex, setCurrentIndex] = useState(1);
   const scrollX = useRef(new Animated.Value(-(1 * (CARD_WIDTH + 80)))).current;
   const currentScrollValue = useRef(-(1 * (CARD_WIDTH + 80)));
+  const isAnimating = useRef(false);
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponder: () => !isAnimating.current,
       onMoveShouldSetPanResponder: (_, gesture) => {
-        return Math.abs(gesture.dx) > 5;
+        return !isAnimating.current && Math.abs(gesture.dx) > 5;
       },
       onPanResponderGrant: () => {
+        if (isAnimating.current) {
+          scrollX.stopAnimation(() => {
+            // Snap to current card position
+            const currentPosition = -(currentIndex * (CARD_WIDTH + 80));
+            scrollX.setValue(currentPosition);
+            currentScrollValue.current = currentPosition;
+            isAnimating.current = false;
+          });
+          return;
+        }
         scrollX.setOffset(currentScrollValue.current);
         scrollX.setValue(0);
       },
       onPanResponderMove: (_, gesture) => {
-        // Clamp the drag to maximum one card distance
-        const maxDrag = CARD_WIDTH + 80;
+        if (isAnimating.current) return;
+        
+        // STRICT: Clamp drag to prevent any possibility of skipping cards
+        const maxDrag = SWIPE_THRESHOLD + 20;
         let clampedDx = gesture.dx;
         
-        // Prevent dragging left if at first card
+        // Prevent dragging right (positive) if at first card
         if (currentIndex === 0 && gesture.dx > 0) {
           clampedDx = 0;
         }
-        // Prevent dragging right if at last card
+        // Prevent dragging left (negative) if at last card
         else if (currentIndex === friendsData.length - 1 && gesture.dx < 0) {
           clampedDx = 0;
         }
-        // Clamp to one card distance
+        // STRICTLY clamp to prevent multi-card movement
         else {
           clampedDx = Math.max(-maxDrag, Math.min(maxDrag, gesture.dx));
         }
@@ -107,41 +120,63 @@ const FriendsTrackScreen: React.FC<FriendsTrackScreenProps> = ({ navigation }) =
         scrollX.setValue(clampedDx);
       },
       onPanResponderRelease: (_, gesture) => {
+        if (isAnimating.current) return;
+        
         scrollX.flattenOffset();
         
         const velocity = gesture.vx;
         const dragDistance = gesture.dx;
         
-        // Determine if we should snap to next/previous card
+        // STRICT: Only allow moving to exactly +1 or -1, nothing beyond
         let targetIndex = currentIndex;
         
-        // Check velocity for fast swipes
-        if (Math.abs(velocity) > 0.5) {
-          if (velocity > 0 && currentIndex > 0) {
-            targetIndex = currentIndex - 1;
-          } else if (velocity < 0 && currentIndex < friendsData.length - 1) {
-            targetIndex = currentIndex + 1;
-          }
-        } else {
-          // Check distance for slow drags
-          if (dragDistance > SWIPE_THRESHOLD && currentIndex > 0) {
-            targetIndex = currentIndex - 1;
-          } else if (dragDistance < -SWIPE_THRESHOLD && currentIndex < friendsData.length - 1) {
-            targetIndex = currentIndex + 1;
-          }
+        // Determine direction based on velocity OR distance
+        const shouldGoNext = (Math.abs(velocity) > 0.5 && velocity < 0) || (dragDistance < -SWIPE_THRESHOLD);
+        const shouldGoPrev = (Math.abs(velocity) > 0.5 && velocity > 0) || (dragDistance > SWIPE_THRESHOLD);
+        
+        if (shouldGoPrev && currentIndex > 0) {
+          targetIndex = currentIndex - 1;
+        } else if (shouldGoNext && currentIndex < friendsData.length - 1) {
+          targetIndex = currentIndex + 1;
+        }
+        
+        // ABSOLUTE SAFETY: Verify targetIndex is ONLY ±1 from current or same
+        const indexDiff = Math.abs(targetIndex - currentIndex);
+        if (indexDiff > 1) {
+          targetIndex = currentIndex;
         }
         
         // Animate to target position
         const targetPosition = -(targetIndex * (CARD_WIDTH + 80));
+        
+        // Prevent new gestures during animation
+        isAnimating.current = true;
         
         Animated.spring(scrollX, {
           toValue: targetPosition,
           useNativeDriver: true,
           friction: 9,
           tension: 50,
-        }).start(() => {
-          setCurrentIndex(targetIndex);
-          currentScrollValue.current = targetPosition;
+        }).start(({ finished }) => {
+          if (!finished) {
+            isAnimating.current = false;
+            return;
+          }
+          
+          // Final safety check before setting state
+          const safeIndex = Math.max(0, Math.min(friendsData.length - 1, targetIndex));
+          const finalIndexDiff = Math.abs(safeIndex - currentIndex);
+          
+          if (finalIndexDiff <= 1) {
+            setCurrentIndex(safeIndex);
+            currentScrollValue.current = targetPosition;
+          } else {
+            const currentPosition = -(currentIndex * (CARD_WIDTH + 80));
+            scrollX.setValue(currentPosition);
+            currentScrollValue.current = currentPosition;
+          }
+          
+          isAnimating.current = false;
         });
       },
     })
