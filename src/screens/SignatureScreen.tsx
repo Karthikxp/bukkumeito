@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: width * 0.2917 - 74,
     top: height * 0.3571 + (height * 0.0141),
-    width: 175
+    width: 185,
 
   },
   helpText: {
