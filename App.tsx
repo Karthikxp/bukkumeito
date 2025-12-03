@@ -13,7 +13,7 @@ function App(): React.JSX.Element {
   return (
     <View style={styles.container}>
       {/* Title */}
-      <Text style={[styles.title, { textAlign: 'center', fontSize: 34.435, fontWeight: '700', letterSpacing: -2 }]}>Bukkumeito</Text>
+      <Text style={styles.title}>Bukkumeito</Text>
       
       {/* Logo */}
       <View style={styles.logoContainer}>
@@ -43,17 +43,18 @@ const styles = StyleSheet.create({
   },
   title: {
     position: 'absolute',
-    left: width * 0.25,
+    width: '100%',
     top: height * 0.2143 + 23.57,
     fontSize: 34.435,
     fontWeight: '700',
     color: '#000000',
     letterSpacing: -2.4104,
     fontFamily: 'Inter',
+    textAlign: 'center',
   },
   logoContainer: {
     position: 'absolute',
-    left: width * 0.25,
+    left: (width - 180) / 2,
     top: height * 0.3571 + 23.29,
     width: 180,
     height: 182.304,
@@ -64,17 +65,18 @@ const styles = StyleSheet.create({
   },
   tagline: {
     position: 'absolute',
-    left: width * 0.375 - 13,
+    width: '100%',
     top: height * 0.7143 - 0.43,
     fontSize: 18,
     fontWeight: '500',
     color: '#000000',
     letterSpacing: -1.26,
     fontFamily: 'General Sans',
+    textAlign: 'center',
   },
   button: {
     position: 'absolute',
-    left: 47,
+    left: '50%',
     top: height * 0.7857 + 56.43,
     width: 266,
     height: 60,
@@ -83,6 +85,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
+    transform: [{ translateX: -133 }],
   },
   buttonText: {
     fontSize: 18,
