@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Dimensions } from 'react-native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
+import CameraModal from '../components/CameraModal';
 
 const { width, height } = Dimensions.get('window');
 
@@ -17,6 +18,8 @@ type ProfileScreenProps = {
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const [username, setUsername] = useState('Franz Hermann');
+  const [cameraVisible, setCameraVisible] = useState(false);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
 
   const handleFindFriends = () => {
     // TODO: Navigate to friends screen
@@ -28,9 +31,16 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     console.log('Skip pressed');
   };
 
-  const handleProfilePicture = () => {
-    // TODO: Open camera/photo picker
-    console.log('Tap for selfie');
+  const handleOpenCamera = () => {
+    setCameraVisible(true);
+  };
+
+  const handleCameraClose = () => {
+    setCameraVisible(false);
+  };
+
+  const handlePhotoCapture = (uri: string) => {
+    setProfileImage(uri);
   };
 
   return (
@@ -51,29 +61,29 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       <Text style={styles.subtitle}>Feeling photogenic?</Text>
 
       {/* Profile Picture */}
-      <TouchableOpacity 
-        style={styles.profilePictureContainer} 
-        onPress={handleProfilePicture}
-        activeOpacity={0.8}
-      >
+      <View style={styles.profilePictureContainer}>
         <Image 
-          source={require('../../Asset/ui/avatar1.png')}
+          source={profileImage ? { uri: profileImage } : require('../../Asset/ui/avatar1.png')}
           style={styles.profilePicture}
           resizeMode="cover"
         />
-      </TouchableOpacity>
+      </View>
 
       {/* Tap for Selfie */}
       <Text style={styles.tapForSelfie}>Tap for Selfie</Text>
 
-      {/* Dog Icon */}
-      <View style={styles.dogContainer}>
+      {/* Dog Icon - Camera Button */}
+      <TouchableOpacity 
+        style={styles.dogContainer} 
+        onPress={handleOpenCamera}
+        activeOpacity={0.7}
+      >
         <Image 
           source={require('../../Asset/ui/dog.png')}
           style={styles.dogIcon}
           resizeMode="contain"
         />
-      </View>
+      </TouchableOpacity>
 
       {/* Username Input Box */}
       <View style={styles.usernameBox}>
@@ -117,6 +127,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       <Text style={styles.friendsHelpText}>
         Follow users from your contact and{'\n'}connect over your reads
       </Text>
+
+      {/* Camera Modal */}
+      <CameraModal
+        visible={cameraVisible}
+        onClose={handleCameraClose}
+        onCapture={handlePhotoCapture}
+      />
     </View>
   );
 };
