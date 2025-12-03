@@ -15,6 +15,7 @@ import {
   Dimensions,
   SafeAreaView,
 } from 'react-native';
+import { WebView } from 'react-native-webview';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 import { getUserProfile } from '../utils/storage';
@@ -121,19 +122,10 @@ const MainPage: React.FC<MainPageProps> = ({ navigation }) => {
             onPress={handleAddBook}
             activeOpacity={0.7}
           >
-            <Text style={styles.addBookTitle}>Add a Book</Text>
-            
-            {/* Book Icon Placeholder */}
-            <View style={styles.bookIconContainer}>
-              <View style={styles.bookIcon}>
-                <View style={styles.bookIconPage} />
-                <View style={[styles.bookIconPage, styles.bookIconPage2]} />
-                <View style={[styles.bookIconPage, styles.bookIconPage3]} />
-              </View>
-            </View>
+          <Text style={styles.addBookTitle}>Add a Book</Text>
 
-            {/* Plus Sign */}
-            <Text style={styles.plusSign}>+</Text>
+          {/* Plus Sign */}
+          <Text style={styles.plusSign}>+</Text>
 
             {/* Import Text */}
             <Text style={styles.importText}>import PDF or EPUB</Text>
@@ -143,8 +135,40 @@ const MainPage: React.FC<MainPageProps> = ({ navigation }) => {
           {/* Additional book cards can be added here */}
         </ScrollView>
 
-        {/* Embedded Red Box - Absolute positioned overlay */}
-        <View style={styles.embeddedBox} />
+        {/* Embedded WebView - Absolute positioned overlay */}
+        <View style={styles.embeddedBox} pointerEvents="none">
+          <WebView
+            source={{ uri: 'https://davvcdn.lon1.cdn.digitaloceanspaces.com/6a35f22287536191e502392b00ce6431/0e4828b946dc107680d5.html' }}
+            style={styles.embeddedWebView}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            originWhitelist={['*']}
+            scrollEnabled={false}
+            showsVerticalScrollIndicator={false}
+            showsHorizontalScrollIndicator={false}
+            automaticallyAdjustContentInsets={false}
+            bounces={false}
+            allowsInlineMediaPlayback={true}
+            scalesPageToFit={false}
+            allowsLinkPreview={false}
+            injectedJavaScript={`
+              const meta = document.createElement('meta');
+              meta.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
+              meta.setAttribute('name', 'viewport');
+              document.getElementsByTagName('head')[0].appendChild(meta);
+              
+              document.addEventListener('gesturestart', function(e) {
+                e.preventDefault();
+              });
+              document.addEventListener('touchmove', function(e) {
+                if (e.scale !== 1) { e.preventDefault(); }
+              }, { passive: false });
+            `}
+          />
+        </View>
+
+        {/* Border Overlay - On top of everything */}
+        <View style={styles.borderOverlay} pointerEvents="none" />
       </View>
 
       {/* Suggestions Section */}
@@ -262,10 +286,6 @@ const styles = StyleSheet.create({
   addBookCard: {
     width: 159,
     height: 227,
-    borderWidth: 1,
-    borderColor: '#000000',
-    borderRadius: 13,
-    backgroundColor: '#ffffff',
     position: 'relative',
     marginRight: 20,
   },
@@ -278,39 +298,6 @@ const styles = StyleSheet.create({
     color: '#000000',
     letterSpacing: -1.0909,
     fontFamily: 'Inter',
-  },
-  bookIconContainer: {
-    position: 'absolute',
-    left: 42,
-    top: 72,
-    width: 71.67,
-    height: 83,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  bookIcon: {
-    width: 60,
-    height: 70,
-    position: 'relative',
-  },
-  bookIconPage: {
-    position: 'absolute',
-    width: 50,
-    height: 65,
-    backgroundColor: '#ffffff',
-    borderWidth: 1.5,
-    borderColor: '#000000',
-    borderRadius: 3,
-    left: 0,
-    top: 0,
-  },
-  bookIconPage2: {
-    left: 3,
-    top: 2,
-  },
-  bookIconPage3: {
-    left: 6,
-    top: 4,
   },
   plusSign: {
     position: 'absolute',
@@ -338,7 +325,22 @@ const styles = StyleSheet.create({
     top: 104,
     width: 159,
     height: 86,
-    backgroundColor: '#FF0000',
+    overflow: 'hidden',
+  },
+  embeddedWebView: {
+    width: 159,
+    height: 86,
+    backgroundColor: 'transparent',
+  },
+  borderOverlay: {
+    position: 'absolute',
+    left: 30,
+    top: 34,
+    width: 159,
+    height: 227,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: '#000000',
   },
   suggestionsTitle: {
     position: 'absolute',
