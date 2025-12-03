@@ -29,7 +29,7 @@ type ProfileScreenProps = {
 };
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
-  const [username, setUsername] = useState('Franz Hermann');
+  const [username, setUsername] = useState('John Doe');
   const [cameraVisible, setCameraVisible] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
@@ -118,6 +118,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     setProfileImage(uri);
   };
 
+  const handleClearPhoto = () => {
+    setProfileImage(null);
+  };
+
   return (
     <KeyboardAvoidingView 
       style={styles.container}
@@ -146,6 +150,17 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           resizeMode="cover"
         />
       </View>
+
+      {/* Clear Photo Button - Only show when custom photo is taken */}
+      {profileImage && (
+        <TouchableOpacity 
+          style={styles.clearButton}
+          onPress={handleClearPhoto}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.clearButtonText}>clear</Text>
+        </TouchableOpacity>
+      )}
 
       {/* Tap for Selfie */}
       <Text style={styles.tapForSelfie}>Tap for Selfie</Text>
@@ -305,6 +320,18 @@ const styles = StyleSheet.create({
     letterSpacing: 0.08,
     fontFamily: 'Inter',
   },
+  clearButton: {
+    position: 'absolute',
+    left: 270,
+    top: 388,
+    padding: 5,
+  },
+  clearButtonText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#000000',
+    fontFamily: 'Inter',
+  },
   dogContainer: {
     position: 'absolute',
     left: width * 0.4167 + 3,
@@ -401,9 +428,9 @@ const styles = StyleSheet.create({
   },
   findFriendsText: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#ffffff',
-    letterSpacing: -1.26,
+    letterSpacing: -1,
     fontFamily: 'Inter',
   },
   skipButton: {
@@ -419,9 +446,9 @@ const styles = StyleSheet.create({
   },
   skipText: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#000000',
-    letterSpacing: -1.26,
+    letterSpacing: -1,
     fontFamily: 'Inter',
   },
   friendsHelpText: {
