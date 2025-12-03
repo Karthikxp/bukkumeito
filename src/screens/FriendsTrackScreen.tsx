@@ -1,5 +1,5 @@
 /**
- * FriendsTrackScreen - Friends Reading Activity with Card Swiping
+ * FriendsTrackScreen - Friends Reading Activity with Tap Navigation
  * 
  * @format
  */
@@ -13,7 +13,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Animated,
-  PanResponder,
+  Pressable,
 } from 'react-native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -21,7 +21,6 @@ import type { RootStackParamList } from '../navigation/RootNavigator';
 const { width, height } = Dimensions.get('window');
 const CARD_WIDTH = 300;
 const CARD_HEIGHT = 457;
-const SWIPE_THRESHOLD = 100; // User must swipe at least 100px to trigger card change
 
 type Friend = {
   id: number;
@@ -77,110 +76,41 @@ const FriendsTrackScreen: React.FC<FriendsTrackScreenProps> = ({ navigation }) =
   const currentScrollValue = useRef(-(1 * (CARD_WIDTH + 80)));
   const isAnimating = useRef(false);
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => !isAnimating.current,
-      onMoveShouldSetPanResponder: (_, gesture) => {
-        return !isAnimating.current && Math.abs(gesture.dx) > 5;
-      },
-      onPanResponderGrant: () => {
-        if (isAnimating.current) {
-          scrollX.stopAnimation(() => {
-            // Snap to current card position
-            const currentPosition = -(currentIndex * (CARD_WIDTH + 80));
-            scrollX.setValue(currentPosition);
-            currentScrollValue.current = currentPosition;
-            isAnimating.current = false;
-          });
-          return;
-        }
-        scrollX.setOffset(currentScrollValue.current);
-        scrollX.setValue(0);
-      },
-      onPanResponderMove: (_, gesture) => {
-        if (isAnimating.current) return;
-        
-        // STRICT: Clamp drag to prevent any possibility of skipping cards
-        const maxDrag = SWIPE_THRESHOLD + 20;
-        let clampedDx = gesture.dx;
-        
-        // Prevent dragging left (negative) if at first card
-        if (currentIndex === 0 && gesture.dx < 0) {
-          clampedDx = 0;
-        }
-        // Prevent dragging right (positive) if at last card
-        else if (currentIndex === friendsData.length - 1 && gesture.dx > 0) {
-          clampedDx = 0;
-        }
-        // STRICTLY clamp to prevent multi-card movement
-        else {
-          clampedDx = Math.max(-maxDrag, Math.min(maxDrag, gesture.dx));
-        }
-        
-        scrollX.setValue(-clampedDx);
-      },
-      onPanResponderRelease: (_, gesture) => {
-        if (isAnimating.current) return;
-        
-        scrollX.flattenOffset();
-        
-        const velocity = gesture.vx;
-        const dragDistance = gesture.dx;
-        
-        // STRICT: Only allow moving to exactly +1 or -1, nothing beyond
-        let targetIndex = currentIndex;
-        
-        // Determine direction based on velocity OR distance (INVERTED)
-        const shouldGoNext = (Math.abs(velocity) > 0.5 && velocity > 0) || (dragDistance > SWIPE_THRESHOLD);
-        const shouldGoPrev = (Math.abs(velocity) > 0.5 && velocity < 0) || (dragDistance < -SWIPE_THRESHOLD);
-        
-        if (shouldGoPrev && currentIndex > 0) {
-          targetIndex = currentIndex - 1;
-        } else if (shouldGoNext && currentIndex < friendsData.length - 1) {
-          targetIndex = currentIndex + 1;
-        }
-        
-        // ABSOLUTE SAFETY: Verify targetIndex is ONLY ±1 from current or same
-        const indexDiff = Math.abs(targetIndex - currentIndex);
-        if (indexDiff > 1) {
-          targetIndex = currentIndex;
-        }
-        
-        // Animate to target position
-        const targetPosition = -(targetIndex * (CARD_WIDTH + 80));
-        
-        // Prevent new gestures during animation
-        isAnimating.current = true;
-        
-        Animated.spring(scrollX, {
-          toValue: targetPosition,
-          useNativeDriver: true,
-          friction: 9,
-          tension: 50,
-        }).start(({ finished }) => {
-          if (!finished) {
-            isAnimating.current = false;
-            return;
-          }
-          
-          // Final safety check before setting state
-          const safeIndex = Math.max(0, Math.min(friendsData.length - 1, targetIndex));
-          const finalIndexDiff = Math.abs(safeIndex - currentIndex);
-          
-          if (finalIndexDiff <= 1) {
-            setCurrentIndex(safeIndex);
-            currentScrollValue.current = targetPosition;
-          } else {
-            const currentPosition = -(currentIndex * (CARD_WIDTH + 80));
-            scrollX.setValue(currentPosition);
-            currentScrollValue.current = currentPosition;
-          }
-          
-          isAnimating.current = false;
-        });
-      },
-    })
-  ).current;
+  const handleCardTap = (direction: 'left' | 'right') => {
+    if (isAnimating.current) return;
+    
+    let targetIndex = currentIndex;
+    
+    if (direction === 'left' && currentIndex > 0) {
+      targetIndex = currentIndex - 1;
+    } else if (direction === 'right' && currentIndex < friendsData.length - 1) {
+      targetIndex = currentIndex + 1;
+    }
+    
+    // No change needed
+    if (targetIndex === currentIndex) return;
+    
+    // Animate to target position
+    const targetPosition = -(targetIndex * (CARD_WIDTH + 80));
+    
+    isAnimating.current = true;
+    
+    Animated.spring(scrollX, {
+      toValue: targetPosition,
+      useNativeDriver: true,
+      friction: 9,
+      tension: 50,
+    }).start(({ finished }) => {
+      if (!finished) {
+        isAnimating.current = false;
+        return;
+      }
+      
+      setCurrentIndex(targetIndex);
+      currentScrollValue.current = targetPosition;
+      isAnimating.current = false;
+    });
+  };
 
   const handleFinishSetup = () => {
     // TODO: Navigate to main app
@@ -270,6 +200,22 @@ const FriendsTrackScreen: React.FC<FriendsTrackScreenProps> = ({ navigation }) =
         <Text style={styles.bookReview} numberOfLines={7}>
           {friend.currentlyReading.review}
         </Text>
+
+        {/* Tap zones - only active for current card */}
+        {positionDiff === 0 && (
+          <>
+            {/* Left half tap zone */}
+            <Pressable
+              style={styles.tapZoneLeft}
+              onPress={() => handleCardTap('right')}
+            />
+            {/* Right half tap zone */}
+            <Pressable
+              style={styles.tapZoneRight}
+              onPress={() => handleCardTap('left')}
+            />
+          </>
+        )}
       </Animated.View>
     );
   };
@@ -296,10 +242,7 @@ const FriendsTrackScreen: React.FC<FriendsTrackScreenProps> = ({ navigation }) =
       </Text>
 
       {/* Cards Container */}
-      <View 
-        style={styles.cardsContainer}
-        {...panResponder.panHandlers}
-      >
+      <View style={styles.cardsContainer}>
         {friendsData.map((friend, index) => renderCard(friend, index))}
       </View>
 
@@ -469,6 +412,22 @@ const styles = StyleSheet.create({
     letterSpacing: -1,
     fontFamily: 'General Sans',
     textAlign: 'right',
+  },
+  tapZoneLeft: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    width: CARD_WIDTH / 2,
+    height: CARD_HEIGHT,
+    zIndex: 20,
+  },
+  tapZoneRight: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    width: CARD_WIDTH / 2,
+    height: CARD_HEIGHT,
+    zIndex: 20,
   },
 });
 
