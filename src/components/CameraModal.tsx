@@ -81,7 +81,7 @@ const CameraModal: React.FC<CameraModalProps> = ({ visible, onClose, onCapture }
           setCapturedImage(croppedImage.uri);
         }
       } catch (error) {
-        console.error('Error taking picture:', error);
+        // Error taking picture
       }
     }
   };

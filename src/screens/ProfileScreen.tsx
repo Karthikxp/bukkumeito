@@ -102,7 +102,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
   const handleSkip = () => {
     // TODO: Navigate to main app
-    console.log('Skip pressed');
   };
 
   const handleOpenCamera = () => {

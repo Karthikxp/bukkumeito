@@ -114,7 +114,6 @@ const FriendsTrackScreen: React.FC<FriendsTrackScreenProps> = ({ navigation }) =
 
   const handleFinishSetup = () => {
     // TODO: Navigate to main app
-    console.log('Finish Setup pressed');
   };
 
   const renderCard = (friend: Friend, index: number) => {
@@ -239,12 +238,12 @@ const FriendsTrackScreen: React.FC<FriendsTrackScreenProps> = ({ navigation }) =
       </Text>
 
       {/* Cards Container */}
-      <View style={styles.cardsContainer}>
+      <View style={styles.cardsContainer} pointerEvents="box-none">
         {friendsData.map((friend, index) => renderCard(friend, index))}
       </View>
 
       {/* Finish Setup Button - Fixed Position */}
-      <View style={styles.finishButtonContainer}>
+      <View style={styles.finishButtonContainer} pointerEvents="box-none">
         <TouchableOpacity 
           style={styles.finishButton}
           onPress={handleFinishSetup}
@@ -390,7 +389,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: height * 0.04,
     alignItems: 'center',
-    zIndex: 100,
+    zIndex: 1000,
   },
   finishButton: {
     width: width * 0.5306,
@@ -401,6 +400,7 @@ const styles = StyleSheet.create({
     borderRadius: 97,
     justifyContent: 'center',
     alignItems: 'center',
+    elevation: 10,
   },
   finishButtonText: {
     fontSize: 20,
