@@ -1,4 +1,28 @@
 {
-  "name": "HelloWorld",
-  "displayName": "HelloWorld"
+  "name": "BukkumeitoApp",
+  "displayName": "BukkumeitoApp",
+  "expo": {
+    "name": "BukkumeitoApp",
+    "slug": "bukkumeitoapp",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.bukkumeitoapp.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.bukkumeitoapp.app"
+    }
+  }
 }
