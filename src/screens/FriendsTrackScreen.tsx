@@ -73,62 +73,63 @@ type FriendsTrackScreenProps = {
 
 const FriendsTrackScreen: React.FC<FriendsTrackScreenProps> = ({ navigation }) => {
   const [currentIndex, setCurrentIndex] = useState(1);
-  const position = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(1)).current;
+  const scrollX = useRef(new Animated.Value(-(1 * (CARD_WIDTH + 80)))).current;
+  const currentScrollValue = useRef(-(1 * (CARD_WIDTH + 80)));
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderMove: (_, gesture) => {
-        position.setValue(gesture.dx);
+      onMoveShouldSetPanResponder: (_, gesture) => {
+        return Math.abs(gesture.dx) > 5;
       },
+      onPanResponderGrant: () => {
+        scrollX.setOffset(currentScrollValue.current);
+        scrollX.setValue(0);
+      },
+      onPanResponderMove: Animated.event(
+        [null, { dx: scrollX }],
+        { useNativeDriver: false }
+      ),
       onPanResponderRelease: (_, gesture) => {
-        if (gesture.dx > SWIPE_THRESHOLD) {
-          // Swipe right - go to previous
-          swipeCard('right');
-        } else if (gesture.dx < -SWIPE_THRESHOLD) {
-          // Swipe left - go to next
-          swipeCard('left');
+        scrollX.flattenOffset();
+        
+        const velocity = gesture.vx;
+        const dragDistance = gesture.dx;
+        
+        // Determine if we should snap to next/previous card
+        let targetIndex = currentIndex;
+        
+        // Check velocity for fast swipes
+        if (Math.abs(velocity) > 0.5) {
+          if (velocity > 0 && currentIndex > 0) {
+            targetIndex = currentIndex - 1;
+          } else if (velocity < 0 && currentIndex < friendsData.length - 1) {
+            targetIndex = currentIndex + 1;
+          }
         } else {
-          // Return to center
-          Animated.spring(position, {
-            toValue: 0,
-            useNativeDriver: true,
-            friction: 8,
-          }).start();
+          // Check distance for slow drags
+          if (dragDistance > SWIPE_THRESHOLD && currentIndex > 0) {
+            targetIndex = currentIndex - 1;
+          } else if (dragDistance < -SWIPE_THRESHOLD && currentIndex < friendsData.length - 1) {
+            targetIndex = currentIndex + 1;
+          }
         }
+        
+        // Animate to target position
+        const targetPosition = -(targetIndex * (CARD_WIDTH + 80));
+        
+        Animated.spring(scrollX, {
+          toValue: targetPosition,
+          useNativeDriver: true,
+          friction: 9,
+          tension: 50,
+        }).start(() => {
+          setCurrentIndex(targetIndex);
+          currentScrollValue.current = targetPosition;
+        });
       },
     })
   ).current;
-
-  const swipeCard = (direction: 'left' | 'right') => {
-    const toValue = direction === 'left' ? -width : width;
-    
-    Animated.parallel([
-      Animated.timing(position, {
-        toValue,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scale, {
-        toValue: 0.8,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      // Update index
-      if (direction === 'left' && currentIndex < friendsData.length - 1) {
-        setCurrentIndex(currentIndex + 1);
-      } else if (direction === 'right' && currentIndex > 0) {
-        setCurrentIndex(currentIndex - 1);
-      }
-      
-      // Reset position
-      position.setValue(0);
-      scale.setValue(1);
-    });
-  };
 
   const handleFinishSetup = () => {
     // TODO: Navigate to main app
@@ -136,47 +137,44 @@ const FriendsTrackScreen: React.FC<FriendsTrackScreenProps> = ({ navigation }) =
   };
 
   const renderCard = (friend: Friend, index: number) => {
-    const isCenter = index === currentIndex;
-    const isLeft = index === currentIndex - 1;
-    const isRight = index === currentIndex + 1;
+    // Base position for each card
+    const cardPosition = index * (CARD_WIDTH + 80);
 
-    if (!isCenter && !isLeft && !isRight) return null;
+    const scale = scrollX.interpolate({
+      inputRange: [
+        -((index + 1) * (CARD_WIDTH + 80)),
+        -(index * (CARD_WIDTH + 80)),
+        -((index - 1) * (CARD_WIDTH + 80)),
+      ],
+      outputRange: [0.8, 1, 0.8],
+      extrapolate: 'clamp',
+    });
 
-    let cardStyle: any = {};
-    
-    if (isCenter) {
-      cardStyle = {
-        transform: [
-          { translateX: position },
-          { scale: scale },
-        ],
-        zIndex: 10,
-      };
-    } else if (isLeft) {
-      cardStyle = {
-        transform: [
-          { translateX: -(CARD_WIDTH * 0.8) - 50 },
-          { scale: 0.7966 },
-        ],
-        zIndex: 5,
-        opacity: 0.7,
-      };
-    } else if (isRight) {
-      cardStyle = {
-        transform: [
-          { translateX: (CARD_WIDTH * 0.8) + 50 },
-          { scale: 0.7966 },
-        ],
-        zIndex: 5,
-        opacity: 0.7,
-      };
-    }
+    const opacity = scrollX.interpolate({
+      inputRange: [
+        -((index + 1) * (CARD_WIDTH + 80)),
+        -(index * (CARD_WIDTH + 80)),
+        -((index - 1) * (CARD_WIDTH + 80)),
+      ],
+      outputRange: [0.6, 1, 0.6],
+      extrapolate: 'clamp',
+    });
 
     return (
       <Animated.View
         key={friend.id}
-        style={[styles.card, cardStyle]}
-        {...(isCenter ? panResponder.panHandlers : {})}
+        style={[
+          styles.card,
+          {
+            transform: [
+              { 
+                translateX: Animated.add(scrollX, cardPosition)
+              },
+              { scale }
+            ],
+            opacity,
+          },
+        ]}
       >
         {/* Name - positioned at left: 117px, top: 18px */}
         <Text style={styles.cardName}>{friend.name}</Text>
@@ -233,7 +231,10 @@ const FriendsTrackScreen: React.FC<FriendsTrackScreenProps> = ({ navigation }) =
       </Text>
 
       {/* Cards Container */}
-      <View style={styles.cardsContainer}>
+      <View 
+        style={styles.cardsContainer}
+        {...panResponder.panHandlers}
+      >
         {friendsData.map((friend, index) => renderCard(friend, index))}
       </View>
 
