@@ -69,6 +69,11 @@ const SignatureScreen: React.FC<SignatureScreenProps> = ({ navigation }) => {
   body,html {
     width: 100%;
     height: 100%;
+  }
+  canvas {
+    touch-action: none;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
   }`;
 
   return (
@@ -94,12 +99,17 @@ const SignatureScreen: React.FC<SignatureScreenProps> = ({ navigation }) => {
       {/* Help Text - positioned at left: 29.17% - 74px, top: 35.71% + 11.29px, width: 127px */}
       <View style={styles.helpTextContainer}>
         <Text style={styles.helpText}>
-          Don't use your original signature!.
+          Don't use your original signature!. {'\n'}
           create a new signature for a personalised experience
         </Text>
       </View>
 
-      {/* Signature Canvas - positioned in the middle area */}
+      {/* Signature Canvas - positioned in the middle area 
+          Enhanced smoothing settings:
+          - minWidth (0.5px): Thinner lines for precision
+          - maxWidth (2.5px): Smooth variation based on pen speed
+          - Optimized canvas rendering for crisp, polished output
+      */}
       <View style={styles.signatureContainer}>
         <SignatureCanvas
           ref={signatureRef}
@@ -113,8 +123,8 @@ const SignatureScreen: React.FC<SignatureScreenProps> = ({ navigation }) => {
           webStyle={style}
           backgroundColor="rgba(255,255,255,0)"
           penColor="black"
-          minWidth={1}
-          maxWidth={2}
+          minWidth={0.5}
+          maxWidth={2.5}
         />
       </View>
 
