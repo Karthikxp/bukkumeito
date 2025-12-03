@@ -182,8 +182,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       setIsSaving(true);
       // Save profile with either the captured image URI or null (for default avatar)
       await saveUserProfile(finalUsername, profileImage);
-      // TODO: Navigate to main app
-      console.log('Profile saved, navigating to main app...');
+      navigation.navigate('MainPage');
     } catch (error) {
       console.error('Error saving profile:', error);
       Alert.alert('Error', 'Failed to save profile. Please try again.');

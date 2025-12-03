@@ -14,6 +14,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import FriendsTrackScreen from '../screens/FriendsTrackScreen';
 import SignatureScreen from '../screens/SignatureScreen';
 import AchievementShowScreen from '../screens/AchievementShowScreen';
+import MainPage from '../screens/MainPage';
 
 // Navigation types
 export type RootStackParamList = {
@@ -22,7 +23,7 @@ export type RootStackParamList = {
   FriendsTrack: undefined;
   Signature: undefined;
   AchievementShow: undefined;
-  Main: undefined;
+  MainPage: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -56,12 +57,10 @@ const RootNavigator = () => {
           name="AchievementShow" 
           component={AchievementShowScreen}
         />
-        {/* Add more screens here as needed
         <Stack.Screen 
-          name="Main" 
-          component={MainTabNavigator}
+          name="MainPage" 
+          component={MainPage}
         />
-        */}
       </Stack.Navigator>
     </NavigationContainer>
   );

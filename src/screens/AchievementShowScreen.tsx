@@ -30,7 +30,7 @@ const AchievementShowScreen: React.FC<AchievementShowScreenProps> = ({ navigatio
   });
 
   const handleStartReading = () => {
-    // TODO: Navigate to main app
+    navigation.navigate('MainPage');
   };
 
   if (!fontsLoaded) {
