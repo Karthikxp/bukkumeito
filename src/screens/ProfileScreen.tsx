@@ -97,8 +97,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   }, []);
 
   const handleFindFriends = () => {
-    // TODO: Navigate to friends screen
-    console.log('Find Friends pressed');
+    navigation.navigate('FriendsTrack');
   };
 
   const handleSkip = () => {
@@ -266,10 +265,10 @@ const styles = StyleSheet.create({
   },
   logoSmallContainer: {
     position: 'absolute',
-    left: width * 0.0833 + 1,
-    top: height * 0.1429 + 1.71,
-    width: 54.305,
-    height: 55,
+    left: width * 0.0833 + (width * 0.0028),
+    top: height * 0.1429 + (height * 0.0021),
+    width: width * 0.1508,
+    height: height * 0.0688,
   },
   logoSmall: {
     width: '100%',
@@ -297,11 +296,11 @@ const styles = StyleSheet.create({
   },
   profilePictureContainer: {
     position: 'absolute',
-    left: width * 0.1667 + 29,
-    top: height * 0.2857 + 21.43,
-    width: 180,
-    height: 180,
-    borderRadius: 90,
+    left: width * 0.1667 + (width * 0.0806),
+    top: height * 0.2857 + (height * 0.0268),
+    width: width * 0.5,
+    height: width * 0.5,
+    borderRadius: width * 0.25,
     borderWidth: 1,
     borderColor: '#000000',
     overflow: 'hidden',
@@ -322,8 +321,8 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     position: 'absolute',
-    left: 270,
-    top: 388,
+    left: width * 0.75,
+    top: height * 0.485,
     padding: 5,
   },
   clearButtonText: {
@@ -334,10 +333,10 @@ const styles = StyleSheet.create({
   },
   dogContainer: {
     position: 'absolute',
-    left: width * 0.4167 + 3,
-    top: height * 0.5714 + 2.86,
-    width: 54.876,
-    height: 52.536,
+    left: width * 0.4167 + (width * 0.0083),
+    top: height * 0.5714 + (height * 0.0036),
+    width: width * 0.1524,
+    height: height * 0.0657,
   },
   dogIcon: {
     width: '100%',
@@ -345,10 +344,10 @@ const styles = StyleSheet.create({
   },
   usernameBox: {
     position: 'absolute',
-    left: width * 0.0833 + 17,
-    top: height * 0.7143 - 0.43,
-    width: 266,
-    height: 60,
+    left: width * 0.0833 + (width * 0.0472),
+    top: height * 0.7143 - (height * 0.00054),
+    width: width * 0.7389,
+    height: height * 0.075,
     backgroundColor: '#ffffff',
     borderWidth: 1,
     borderColor: '#000000',
@@ -356,7 +355,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: width * 0.0556,
     paddingVertical: 0,
     overflow: 'visible',
   },
@@ -376,8 +375,8 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
     paddingVertical: 0,
-    paddingHorizontal: 5,
-    height: 60,
+    paddingHorizontal: width * 0.0139,
+    height: height * 0.075,
     lineHeight: 22,
   },
   customPlaceholder: {
@@ -411,15 +410,15 @@ const styles = StyleSheet.create({
   },
   buttonsContainer: {
     position: 'absolute',
-    left: width * 0.0833 + 17,
-    top: height * 0.7857 + 54.43,
-    width: 266,
-    height: 60,
+    left: width * 0.0833 + (width * 0.0472),
+    top: height * 0.7857 + (height * 0.068),
+    width: width * 0.7389,
+    height: height * 0.075,
     flexDirection: 'row',
   },
   findFriendsButton: {
-    width: 163,
-    height: 60,
+    width: width * 0.4528,
+    height: height * 0.075,
     backgroundColor: '#000000',
     borderTopLeftRadius: 97,
     borderBottomLeftRadius: 97,
@@ -434,8 +433,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter',
   },
   skipButton: {
-    width: 103,
-    height: 60,
+    width: width * 0.2861,
+    height: height * 0.075,
     backgroundColor: '#ffffff',
     borderWidth: 1,
     borderColor: '#000000',

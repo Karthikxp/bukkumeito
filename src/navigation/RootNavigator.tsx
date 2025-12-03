@@ -11,11 +11,13 @@ import { createStackNavigator } from '@react-navigation/stack';
 // Import screens
 import IntroScreen from '../screens/IntroScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import FriendsTrackScreen from '../screens/FriendsTrackScreen';
 
 // Navigation types
 export type RootStackParamList = {
   Intro: undefined;
   Profile: undefined;
+  FriendsTrack: undefined;
   Main: undefined;
 };
 
@@ -37,6 +39,10 @@ const RootNavigator = () => {
         <Stack.Screen 
           name="Profile" 
           component={ProfileScreen}
+        />
+        <Stack.Screen 
+          name="FriendsTrack" 
+          component={FriendsTrackScreen}
         />
         {/* Add more screens here as needed
         <Stack.Screen 
