@@ -27,11 +27,58 @@ type MainPageProps = {
   navigation: StackNavigationProp<RootStackParamList, 'MainPage'>;
 };
 
+// Suggested books with high-quality covers
+const SUGGESTED_BOOKS = [
+  {
+    id: 'sugg-1',
+    title: '1984',
+    authors: ['George Orwell'],
+    coverUrl: 'https://books.google.com/books/publisher/content/images/frontcover/kotPYEqx7kMC?fife=w400-h600',
+    publishedDate: '1949',
+  },
+  {
+    id: 'sugg-2',
+    title: 'The Great Gatsby',
+    authors: ['F. Scott Fitzgerald'],
+    coverUrl: 'https://books.google.com/books/publisher/content/images/frontcover/iUv5AwAAQBAJ?fife=w400-h600',
+    publishedDate: '1925',
+  },
+  {
+    id: 'sugg-3',
+    title: 'To Kill a Mockingbird',
+    authors: ['Harper Lee'],
+    coverUrl: 'https://books.google.com/books/publisher/content/images/frontcover/PGR2AwAAQBAJ?fife=w400-h600',
+    publishedDate: '1960',
+  },
+  {
+    id: 'sugg-4',
+    title: 'Pride and Prejudice',
+    authors: ['Jane Austen'],
+    coverUrl: 'https://books.google.com/books/publisher/content/images/frontcover/s1gVAAAAYAAJ?fife=w400-h600',
+    publishedDate: '1813',
+  },
+  {
+    id: 'sugg-5',
+    title: 'Harry Potter and the Philosopher\'s Stone',
+    authors: ['J.K. Rowling'],
+    coverUrl: 'https://books.google.com/books/publisher/content/images/frontcover/wrOQLV6xB-wC?fife=w400-h600',
+    publishedDate: '1997',
+  },
+  {
+    id: 'sugg-6',
+    title: 'The Hobbit',
+    authors: ['J.R.R. Tolkien'],
+    coverUrl: 'https://books.google.com/books/publisher/content/images/frontcover/hFfhrCWiLSMC?fife=w400-h600',
+    publishedDate: '1937',
+  },
+];
+
 const MainPage: React.FC<MainPageProps> = ({ navigation }) => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [username, setUsername] = useState('');
   const [books, setBooks] = useState<Book[]>([]);
   const [bookSearchVisible, setBookSearchVisible] = useState(false);
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadUserProfile();
@@ -202,8 +249,13 @@ const MainPage: React.FC<MainPageProps> = ({ navigation }) => {
 
           {/* User's Books */}
           {books.map((book) => (
-            <View key={book.id} style={styles.bookCard}>
-              {book.coverUrl ? (
+            <TouchableOpacity
+              key={book.id}
+              style={styles.bookCard}
+              onPress={() => navigation.navigate('Recorder', { bookTitle: book.title })}
+              activeOpacity={0.9}
+            >
+              {book.coverUrl && !imageErrors.has(book.id) ? (
                 <Image
                   source={{ 
                     uri: book.coverUrl,
@@ -212,6 +264,10 @@ const MainPage: React.FC<MainPageProps> = ({ navigation }) => {
                   style={styles.bookCover}
                   resizeMode="cover"
                   fadeDuration={200}
+                  onError={() => {
+                    console.log('Image load error for book:', book.title);
+                    setImageErrors(prev => new Set(prev).add(book.id));
+                  }}
                 />
               ) : (
                 <View style={styles.bookCoverPlaceholder}>
@@ -232,12 +288,15 @@ const MainPage: React.FC<MainPageProps> = ({ navigation }) => {
               {/* Remove button */}
               <TouchableOpacity
                 style={styles.removeButton}
-                onPress={() => handleRemoveBook(book.id)}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  handleRemoveBook(book.id);
+                }}
                 activeOpacity={0.7}
               >
                 <Text style={styles.removeButtonText}>×</Text>
               </TouchableOpacity>
-            </View>
+            </TouchableOpacity>
           ))}
         </ScrollView>
       </View>
@@ -245,14 +304,58 @@ const MainPage: React.FC<MainPageProps> = ({ navigation }) => {
       {/* Suggestions Section */}
       <Text style={styles.suggestionsTitle}>Suggestions</Text>
 
-      {/* Suggested Frame - Vertical Scroll */}
+      {/* Suggested Frame - Horizontal Scroll */}
       <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
         style={styles.suggestedFrame}
         contentContainerStyle={styles.suggestedFrameContent}
-        showsVerticalScrollIndicator={false}
       >
-        {/* Suggested books will be added here */}
-        {/* Placeholder for suggested content */}
+        {SUGGESTED_BOOKS.map((book) => (
+          <TouchableOpacity
+            key={book.id}
+            style={styles.suggestionCard}
+            onPress={async () => {
+              try {
+                await addBook(book);
+                await loadUserBooks();
+              } catch (error) {
+                console.error('Error adding suggested book:', error);
+              }
+            }}
+            activeOpacity={0.7}
+          >
+            {book.coverUrl && !imageErrors.has(book.id) ? (
+              <Image
+                source={{ 
+                  uri: book.coverUrl,
+                  cache: 'force-cache',
+                }}
+                style={styles.suggestionCover}
+                resizeMode="cover"
+                fadeDuration={200}
+                onError={() => {
+                  console.log('Image load error for suggested book:', book.title);
+                  setImageErrors(prev => new Set(prev).add(book.id));
+                }}
+              />
+            ) : (
+              <View style={styles.suggestionCoverPlaceholder}>
+                <Text style={styles.bookCoverText}>?</Text>
+              </View>
+            )}
+            
+            <Text style={styles.suggestionTitle} numberOfLines={2}>
+              {book.title}
+            </Text>
+            
+            {book.authors && book.authors.length > 0 && (
+              <Text style={styles.suggestionAuthor} numberOfLines={1}>
+                {book.authors[0]}
+              </Text>
+            )}
+          </TouchableOpacity>
+        ))}
       </ScrollView>
 
       {/* Book Search Modal */}
@@ -274,7 +377,7 @@ const styles = StyleSheet.create({
   logoSmallContainer: {
     position: 'absolute',
     left: width * 0.0833,
-    top: 21,
+    top: 32,
     width: 36.189,
     height: 36.653,
   },
@@ -487,7 +590,7 @@ const styles = StyleSheet.create({
   suggestionsTitle: {
     position: 'absolute',
     left: 29,
-    top: height * 0.6429 + 1.79,
+    top: height * 0.6029 + 1.79,
     fontSize: 20,
     fontWeight: '700',
     color: '#000000',
@@ -502,7 +605,47 @@ const styles = StyleSheet.create({
     height: 271,
   },
   suggestedFrameContent: {
-    paddingHorizontal: 30,
+    paddingLeft: 30,
+    paddingRight: 30,
+  },
+  suggestionCard: {
+    width: 159,
+    height: 227,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: '#000000',
+    backgroundColor: '#ffffff',
+    marginRight: 20,
+    overflow: 'hidden',
+  },
+  suggestionCover: {
+    width: '100%',
+    height: 180,
+  },
+  suggestionCoverPlaceholder: {
+    width: '100%',
+    height: 180,
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  suggestionTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#000000',
+    letterSpacing: -0.84,
+    fontFamily: 'Inter',
+    paddingHorizontal: 8,
+    paddingTop: 6,
+  },
+  suggestionAuthor: {
+    fontSize: 10,
+    fontWeight: '400',
+    color: '#666666',
+    letterSpacing: -0.7,
+    fontFamily: 'Inter',
+    paddingHorizontal: 8,
+    paddingTop: 2,
   },
 });
 

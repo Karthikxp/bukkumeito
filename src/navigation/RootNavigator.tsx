@@ -15,6 +15,7 @@ import FriendsTrackScreen from '../screens/FriendsTrackScreen';
 import SignatureScreen from '../screens/SignatureScreen';
 import AchievementShowScreen from '../screens/AchievementShowScreen';
 import MainPage from '../screens/MainPage';
+import RecorderScreen from '../screens/RecorderScreen';
 
 // Navigation types
 export type RootStackParamList = {
@@ -24,6 +25,7 @@ export type RootStackParamList = {
   Signature: undefined;
   AchievementShow: undefined;
   MainPage: undefined;
+  Recorder: { bookTitle?: string };
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -60,6 +62,10 @@ const RootNavigator = () => {
         <Stack.Screen 
           name="MainPage" 
           component={MainPage}
+        />
+        <Stack.Screen 
+          name="Recorder" 
+          component={RecorderScreen}
         />
       </Stack.Navigator>
     </NavigationContainer>

@@ -37,8 +37,13 @@ interface BookSearchModalProps {
 }
 
 // Helper function to get the highest quality image URL
-const getHighQualityImageUrl = (url: string): string => {
+const getHighQualityImageUrl = (url: string, bookId?: string): string => {
   if (!url) return url;
+  
+  // If we have a book ID, try to construct the more reliable publisher content URL
+  if (bookId && url.includes('books.google.com')) {
+    return `https://books.google.com/books/publisher/content/images/frontcover/${bookId}?fife=w400-h600`;
+  }
   
   return url
     .replace('http://', 'https://')
@@ -48,7 +53,7 @@ const getHighQualityImageUrl = (url: string): string => {
     .replace('zoom=4', 'zoom=0')
     .replace('zoom=5', 'zoom=0')
     .replace('&edge=curl', '')         // Remove edge curl for cleaner image
-    .replace('img=1', 'img=1&fife=w800'); // Request higher resolution via fife parameter
+    .replace('img=1', 'img=1&fife=w400-h600'); // Request higher resolution via fife parameter
 };
 
 const BookSearchModal: React.FC<BookSearchModalProps> = ({
@@ -193,7 +198,7 @@ const BookSearchModal: React.FC<BookSearchModalProps> = ({
                             imageLinks.smallThumbnail;
             
             if (imageUrl) {
-              coverUrl = getHighQualityImageUrl(imageUrl);
+              coverUrl = getHighQualityImageUrl(imageUrl, item.id);
             }
           }
           

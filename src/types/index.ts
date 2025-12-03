@@ -4,6 +4,9 @@ export type RootStackParamList = {
   Profile: undefined;
 };
 
+// Export Note type
+export { Note } from './Note';
+
 export type TabParamList = {
   Home: undefined;
   Profile: undefined;
