@@ -104,12 +104,12 @@ const FriendsTrackScreen: React.FC<FriendsTrackScreenProps> = ({ navigation }) =
         const maxDrag = SWIPE_THRESHOLD + 20;
         let clampedDx = gesture.dx;
         
-        // Prevent dragging right (positive) if at first card
-        if (currentIndex === 0 && gesture.dx > 0) {
+        // Prevent dragging left (negative) if at first card
+        if (currentIndex === 0 && gesture.dx < 0) {
           clampedDx = 0;
         }
-        // Prevent dragging left (negative) if at last card
-        else if (currentIndex === friendsData.length - 1 && gesture.dx < 0) {
+        // Prevent dragging right (positive) if at last card
+        else if (currentIndex === friendsData.length - 1 && gesture.dx > 0) {
           clampedDx = 0;
         }
         // STRICTLY clamp to prevent multi-card movement
@@ -117,7 +117,7 @@ const FriendsTrackScreen: React.FC<FriendsTrackScreenProps> = ({ navigation }) =
           clampedDx = Math.max(-maxDrag, Math.min(maxDrag, gesture.dx));
         }
         
-        scrollX.setValue(clampedDx);
+        scrollX.setValue(-clampedDx);
       },
       onPanResponderRelease: (_, gesture) => {
         if (isAnimating.current) return;
@@ -130,9 +130,9 @@ const FriendsTrackScreen: React.FC<FriendsTrackScreenProps> = ({ navigation }) =
         // STRICT: Only allow moving to exactly +1 or -1, nothing beyond
         let targetIndex = currentIndex;
         
-        // Determine direction based on velocity OR distance
-        const shouldGoNext = (Math.abs(velocity) > 0.5 && velocity < 0) || (dragDistance < -SWIPE_THRESHOLD);
-        const shouldGoPrev = (Math.abs(velocity) > 0.5 && velocity > 0) || (dragDistance > SWIPE_THRESHOLD);
+        // Determine direction based on velocity OR distance (INVERTED)
+        const shouldGoNext = (Math.abs(velocity) > 0.5 && velocity > 0) || (dragDistance > SWIPE_THRESHOLD);
+        const shouldGoPrev = (Math.abs(velocity) > 0.5 && velocity < 0) || (dragDistance < -SWIPE_THRESHOLD);
         
         if (shouldGoPrev && currentIndex > 0) {
           targetIndex = currentIndex - 1;
