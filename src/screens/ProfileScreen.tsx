@@ -173,14 +173,18 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           isKeyboardVisible && styles.usernameBoxElevated,
         ]}
       >
+        {/* Custom Placeholder */}
+        {!username && !isFocused && (
+          <Text style={styles.customPlaceholder}>What do you go by?</Text>
+        )}
+        
         <TextInput
           style={styles.usernameInput}
           value={username}
           onChangeText={setUsername}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          placeholder="Your Name"
-          placeholderTextColor="#999999"
+          placeholder=""
           autoCorrect={false}
           autoCapitalize="words"
           returnKeyType="done"
@@ -349,6 +353,17 @@ const styles = StyleSheet.create({
     height: 60,
     lineHeight: 22,
   },
+  customPlaceholder: {
+    position: 'absolute',
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#999999',
+    letterSpacing: -0.98,
+    fontFamily: 'Inter',
+    textAlign: 'center',
+    alignSelf: 'center',
+    pointerEvents: 'none',
+  },
   blinkingCursor: {
     width: 2,
     height: 24,
@@ -357,7 +372,8 @@ const styles = StyleSheet.create({
   },
   usernameHelpText: {
     position: 'absolute',
-    left: width * 0.5417 - 14.5,
+    left: 0,
+    right: 0,
     top: height * 0.7857 + 12.43,
     fontSize: 9,
     fontWeight: '300',
@@ -365,7 +381,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.63,
     fontFamily: 'Inter',
     textAlign: 'center',
-    transform: [{ translateX: -63.5 }],
   },
   buttonsContainer: {
     position: 'absolute',
@@ -411,16 +426,15 @@ const styles = StyleSheet.create({
   },
   friendsHelpText: {
     position: 'absolute',
-    left: width * 0.5417 - 14.5,
+    left: 0,
+    right: 0,
     top: height * 0.9286 + 10.14,
-    width: 150,
     fontSize: 9,
     fontWeight: '300',
     color: '#000000',
     letterSpacing: -0.63,
     fontFamily: 'Inter',
     textAlign: 'center',
-    transform: [{ translateX: -63.5 }],
   },
 });
 
