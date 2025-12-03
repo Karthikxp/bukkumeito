@@ -4,7 +4,7 @@
  * @format
  */
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,10 +12,12 @@ import {
   Image,
   TouchableOpacity,
   Dimensions,
+  Alert,
 } from 'react-native';
 import SignatureCanvas from 'react-native-signature-canvas';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
+import { saveUserSignature, getUserSignature } from '../utils/signature';
 
 const { width, height } = Dimensions.get('window');
 
@@ -26,17 +28,48 @@ type SignatureScreenProps = {
 const SignatureScreen: React.FC<SignatureScreenProps> = ({ navigation }) => {
   const signatureRef = useRef<any>(null);
   const [hasSignature, setHasSignature] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [existingSignature, setExistingSignature] = useState(false);
+
+  // Load existing signature on mount
+  useEffect(() => {
+    const loadExistingSignature = async () => {
+      const signature = await getUserSignature();
+      if (signature) {
+        setExistingSignature(true);
+      }
+    };
+    loadExistingSignature();
+  }, []);
 
   const handleConfirm = () => {
-    if (signatureRef.current) {
+    if (signatureRef.current && hasSignature) {
       signatureRef.current.readSignature();
+    } else if (!hasSignature) {
+      Alert.alert('No Signature', 'Please add your signature before confirming.');
     }
   };
 
-  const handleSignature = (signature: string) => {
-    // Save signature and navigate to achievement show screen
-    setHasSignature(true);
-    navigation.navigate('AchievementShow');
+  const handleSignature = async (signature: string) => {
+    // Save signature as base64 PNG - perfect for stamp animations and drawing animations
+    // NOTE: This REPLACES any existing signature - only ONE signature per user
+    try {
+      setIsSaving(true);
+      
+      // Save the signature (will replace existing one)
+      await saveUserSignature(signature);
+      
+      setHasSignature(true);
+      setExistingSignature(true);
+      
+      // Navigate to achievement show screen
+      navigation.navigate('AchievementShow');
+    } catch (error) {
+      console.error('Error saving signature:', error);
+      Alert.alert('Error', 'Failed to save signature. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleEmpty = () => {
@@ -143,11 +176,14 @@ const SignatureScreen: React.FC<SignatureScreenProps> = ({ navigation }) => {
       {/* Confirm Sign Button - positioned at bottom: 55px, centered */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity 
-          style={styles.button}
+          style={[styles.button, isSaving && styles.buttonDisabled]}
           onPress={handleConfirm}
           activeOpacity={0.8}
+          disabled={isSaving}
         >
-          <Text style={styles.buttonText}>Confirm Sign</Text>
+          <Text style={styles.buttonText}>
+            {isSaving ? 'Saving...' : 'Confirm Sign'}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -254,6 +290,9 @@ const styles = StyleSheet.create({
     color: '#000000',
     letterSpacing: -1,
     fontFamily: 'Inter',
+  },
+  buttonDisabled: {
+    opacity: 0.5,
   },
 });
 

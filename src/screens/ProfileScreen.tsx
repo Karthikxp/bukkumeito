@@ -17,10 +17,12 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 import CameraModal from '../components/CameraModal';
+import { saveUserProfile, getUserProfile } from '../utils/storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -29,14 +31,33 @@ type ProfileScreenProps = {
 };
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
-  const [username, setUsername] = useState('John Doe');
+  const [username, setUsername] = useState('');
   const [cameraVisible, setCameraVisible] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   const inputContainerPosition = useRef(new Animated.Value(0)).current;
   const cursorOpacity = useRef(new Animated.Value(1)).current;
+  const shakeAnimation = useRef(new Animated.Value(0)).current;
+
+  // Load existing profile on mount
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const profile = await getUserProfile();
+        if (profile) {
+          setUsername(profile.username);
+          setProfileImage(profile.profileImageUri);
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      }
+    };
+
+    loadProfile();
+  }, []);
 
   useEffect(() => {
     // Blinking cursor animation
@@ -96,12 +117,79 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     };
   }, []);
 
-  const handleFindFriends = () => {
-    navigation.navigate('FriendsTrack');
+  const triggerShake = () => {
+    // Reset animation
+    shakeAnimation.setValue(0);
+    
+    // Shake animation sequence
+    Animated.sequence([
+      Animated.timing(shakeAnimation, {
+        toValue: 10,
+        duration: 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnimation, {
+        toValue: -10,
+        duration: 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnimation, {
+        toValue: 10,
+        duration: 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnimation, {
+        toValue: -10,
+        duration: 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnimation, {
+        toValue: 0,
+        duration: 50,
+        useNativeDriver: true,
+      }),
+    ]).start();
   };
 
-  const handleSkip = () => {
-    // TODO: Navigate to main app
+  const handleFindFriends = async () => {
+    if (!username.trim()) {
+      triggerShake();
+      return;
+    }
+
+    if (isSaving) return;
+
+    try {
+      setIsSaving(true);
+      // Save profile with either the captured image URI or null (for default avatar)
+      await saveUserProfile(username.trim(), profileImage);
+      navigation.navigate('FriendsTrack');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      Alert.alert('Error', 'Failed to save profile. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSkip = async () => {
+    // Save profile even when skipping
+    const finalUsername = username.trim() || 'User';
+
+    if (isSaving) return;
+
+    try {
+      setIsSaving(true);
+      // Save profile with either the captured image URI or null (for default avatar)
+      await saveUserProfile(finalUsername, profileImage);
+      // TODO: Navigate to main app
+      console.log('Profile saved, navigating to main app...');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      Alert.alert('Error', 'Failed to save profile. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleOpenCamera = () => {
@@ -112,12 +200,40 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     setCameraVisible(false);
   };
 
-  const handlePhotoCapture = (uri: string) => {
+  const handlePhotoCapture = async (uri: string) => {
     setProfileImage(uri);
+    // Auto-save profile image when captured
+    if (username.trim()) {
+      try {
+        await saveUserProfile(username.trim(), uri);
+      } catch (error) {
+        console.error('Error auto-saving profile image:', error);
+      }
+    }
   };
 
-  const handleClearPhoto = () => {
+  const handleClearPhoto = async () => {
     setProfileImage(null);
+    // Auto-save to remove profile image
+    if (username.trim()) {
+      try {
+        await saveUserProfile(username.trim(), null);
+      } catch (error) {
+        console.error('Error auto-saving profile clear:', error);
+      }
+    }
+  };
+
+  const handleUsernameBlur = async () => {
+    setIsFocused(false);
+    // Auto-save username when user finishes editing
+    if (username.trim()) {
+      try {
+        await saveUserProfile(username.trim(), profileImage);
+      } catch (error) {
+        console.error('Error auto-saving username:', error);
+      }
+    }
   };
 
   return (
@@ -181,7 +297,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         style={[
           styles.usernameBox,
           {
-            transform: [{ translateY: inputContainerPosition }],
+            transform: [
+              { translateY: inputContainerPosition },
+              { translateX: shakeAnimation },
+            ],
           },
           isKeyboardVisible && styles.usernameBoxElevated,
         ]}
@@ -196,7 +315,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           value={username}
           onChangeText={setUsername}
           onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
+          onBlur={handleUsernameBlur}
           placeholder=""
           autoCorrect={false}
           autoCapitalize="words"
@@ -224,18 +343,22 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       <View style={styles.buttonsContainer}>
         {/* Find Friends Button */}
         <TouchableOpacity 
-          style={styles.findFriendsButton} 
+          style={[styles.findFriendsButton, isSaving && styles.buttonDisabled]} 
           onPress={handleFindFriends}
           activeOpacity={0.8}
+          disabled={isSaving}
         >
-          <Text style={styles.findFriendsText}>Find Friends</Text>
+          <Text style={styles.findFriendsText}>
+            {isSaving ? 'Saving...' : 'Find Friends'}
+          </Text>
         </TouchableOpacity>
 
         {/* Skip Button */}
         <TouchableOpacity 
-          style={styles.skipButton} 
+          style={[styles.skipButton, isSaving && styles.buttonDisabled]} 
           onPress={handleSkip}
           activeOpacity={0.8}
+          disabled={isSaving}
         >
           <Text style={styles.skipText}>Skip</Text>
         </TouchableOpacity>
@@ -460,6 +583,9 @@ const styles = StyleSheet.create({
     letterSpacing: -0.63,
     fontFamily: 'Inter',
     textAlign: 'center',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });
 
