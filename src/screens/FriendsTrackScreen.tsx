@@ -113,7 +113,7 @@ const FriendsTrackScreen: React.FC<FriendsTrackScreenProps> = ({ navigation }) =
   };
 
   const handleFinishSetup = () => {
-    // TODO: Navigate to main app
+    navigation.navigate('Signature');
   };
 
   const renderCard = (friend: Friend, index: number) => {
@@ -249,7 +249,7 @@ const FriendsTrackScreen: React.FC<FriendsTrackScreenProps> = ({ navigation }) =
           onPress={handleFinishSetup}
           activeOpacity={0.8}
         >
-          <Text style={styles.finishButtonText}>Finish Setup</Text>
+          <Text style={styles.finishButtonText}>Next Step</Text>
         </TouchableOpacity>
       </View>
     </View>
