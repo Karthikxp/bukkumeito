@@ -34,8 +34,9 @@ const SignatureScreen: React.FC<SignatureScreenProps> = ({ navigation }) => {
   };
 
   const handleSignature = (signature: string) => {
-    // TODO: Save signature and navigate to next screen
+    // Save signature and navigate to achievement show screen
     setHasSignature(true);
+    navigation.navigate('AchievementShow');
   };
 
   const handleEmpty = () => {
