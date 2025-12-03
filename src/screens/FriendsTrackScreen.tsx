@@ -120,9 +120,6 @@ const FriendsTrackScreen: React.FC<FriendsTrackScreenProps> = ({ navigation }) =
   const renderCard = (friend: Friend, index: number) => {
     // Calculate horizontal position relative to current index
     const positionDiff = index - currentIndex;
-    
-    // Only render cards that are visible (current, previous, next)
-    if (Math.abs(positionDiff) > 1) return null;
 
     // Center position for the main card
     const centerPosition = (width - CARD_WIDTH) / 2;
