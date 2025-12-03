@@ -17,7 +17,7 @@ function App(): React.JSX.Element {
       <Text style={styles.title}>Bukkumeito</Text>
       
       {/* Logo - ShapeLax Animation */}
-      <View style={styles.logoContainer}>
+      <View style={styles.logoContainer} pointerEvents="none">
         <View style={styles.logoWrapper}>
           <WebView
             source={{ uri: 'https://davvcdn.lon1.cdn.digitaloceanspaces.com/6a35f22287536191e502392b00ce6431/fa3b59e36cc29a4ecd99.html' }}
@@ -31,6 +31,21 @@ function App(): React.JSX.Element {
             automaticallyAdjustContentInsets={false}
             bounces={false}
             allowsInlineMediaPlayback={true}
+            scalesPageToFit={false}
+            allowsLinkPreview={false}
+            injectedJavaScript={`
+              const meta = document.createElement('meta');
+              meta.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
+              meta.setAttribute('name', 'viewport');
+              document.getElementsByTagName('head')[0].appendChild(meta);
+              
+              document.addEventListener('gesturestart', function(e) {
+                e.preventDefault();
+              });
+              document.addEventListener('touchmove', function(e) {
+                if (e.scale !== 1) { e.preventDefault(); }
+              }, { passive: false });
+            `}
           />
         </View>
       </View>
