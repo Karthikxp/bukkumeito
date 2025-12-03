@@ -29,7 +29,7 @@ function App(): React.JSX.Element {
       
       {/* Enter Setup Button */}
       <TouchableOpacity style={styles.button} activeOpacity={0.8}>
-        <Text style={styles.buttonText}>Enter Setup</Text>
+        <Text style={{ color: '#ffffff', fontSize: 18, fontWeight: '600', fontFamily: 'Inter', letterSpacing: -1.26 }}>Enter Setup</Text>
       </TouchableOpacity>
     </View>
   );
