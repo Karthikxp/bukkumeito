@@ -86,10 +86,26 @@ const FriendsTrackScreen: React.FC<FriendsTrackScreenProps> = ({ navigation }) =
         scrollX.setOffset(currentScrollValue.current);
         scrollX.setValue(0);
       },
-      onPanResponderMove: Animated.event(
-        [null, { dx: scrollX }],
-        { useNativeDriver: false }
-      ),
+      onPanResponderMove: (_, gesture) => {
+        // Clamp the drag to maximum one card distance
+        const maxDrag = CARD_WIDTH + 80;
+        let clampedDx = gesture.dx;
+        
+        // Prevent dragging left if at first card
+        if (currentIndex === 0 && gesture.dx > 0) {
+          clampedDx = 0;
+        }
+        // Prevent dragging right if at last card
+        else if (currentIndex === friendsData.length - 1 && gesture.dx < 0) {
+          clampedDx = 0;
+        }
+        // Clamp to one card distance
+        else {
+          clampedDx = Math.max(-maxDrag, Math.min(maxDrag, gesture.dx));
+        }
+        
+        scrollX.setValue(clampedDx);
+      },
       onPanResponderRelease: (_, gesture) => {
         scrollX.flattenOffset();
         
@@ -137,8 +153,20 @@ const FriendsTrackScreen: React.FC<FriendsTrackScreenProps> = ({ navigation }) =
   };
 
   const renderCard = (friend: Friend, index: number) => {
-    // Base position for each card
-    const cardPosition = index * (CARD_WIDTH + 80);
+    // Calculate horizontal position relative to current index
+    const positionDiff = index - currentIndex;
+    
+    // Only render cards that are visible (current, previous, next)
+    if (Math.abs(positionDiff) > 1) return null;
+
+    // Center position for the main card
+    const centerPosition = (width - CARD_WIDTH) / 2;
+    
+    // Side cards positioned to peek from edges
+    // Left card shows ~40px on left edge
+    const leftCardPosition = -CARD_WIDTH + 40;
+    // Right card shows ~40px on right edge
+    const rightCardPosition = width - 40;
 
     const scale = scrollX.interpolate({
       inputRange: [
@@ -146,17 +174,21 @@ const FriendsTrackScreen: React.FC<FriendsTrackScreenProps> = ({ navigation }) =
         -(index * (CARD_WIDTH + 80)),
         -((index - 1) * (CARD_WIDTH + 80)),
       ],
-      outputRange: [0.8, 1, 0.8],
+      outputRange: [0.7965, 1, 0.7965],
       extrapolate: 'clamp',
     });
 
-    const opacity = scrollX.interpolate({
+    const translateX = scrollX.interpolate({
       inputRange: [
         -((index + 1) * (CARD_WIDTH + 80)),
         -(index * (CARD_WIDTH + 80)),
         -((index - 1) * (CARD_WIDTH + 80)),
       ],
-      outputRange: [0.6, 1, 0.6],
+      outputRange: [
+        rightCardPosition,
+        centerPosition,
+        leftCardPosition,
+      ],
       extrapolate: 'clamp',
     });
 
@@ -167,12 +199,10 @@ const FriendsTrackScreen: React.FC<FriendsTrackScreenProps> = ({ navigation }) =
           styles.card,
           {
             transform: [
-              { 
-                translateX: Animated.add(scrollX, cardPosition)
-              },
+              { translateX },
               { scale }
             ],
-            opacity,
+            zIndex: positionDiff === 0 ? 10 : 5,
           },
         ]}
       >
@@ -302,9 +332,11 @@ const styles = StyleSheet.create({
     height: CARD_HEIGHT,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'visible',
   },
   card: {
     position: 'absolute',
+    left: 0,
     width: 300,
     height: 457,
     backgroundColor: '#131313',
