@@ -138,7 +138,7 @@ const MainPage: React.FC<MainPageProps> = ({ navigation }) => {
         {/* Embedded WebView - Absolute positioned overlay */}
         <View style={styles.embeddedBox} pointerEvents="none">
           <WebView
-            source={{ uri: 'https://davvcdn.lon1.cdn.digitaloceanspaces.com/6a35f22287536191e502392b00ce6431/0e4828b946dc107680d5.html' }}
+            source={{ uri: 'https://davvcdn.lon1.cdn.digitaloceanspaces.com/6a35f22287536191e502392b00ce6431/7425cbadee753504ccf8.html' }}
             style={styles.embeddedWebView}
             javaScriptEnabled={true}
             domStorageEnabled={true}
@@ -324,12 +324,12 @@ const styles = StyleSheet.create({
     left: 30,
     top: 104,
     width: 159,
-    height: 86,
+    height: 106,
     overflow: 'hidden',
   },
   embeddedWebView: {
     width: 159,
-    height: 86,
+    height: 106,
     backgroundColor: 'transparent',
   },
   borderOverlay: {
