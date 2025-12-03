@@ -18,7 +18,8 @@ import {
 import { WebView } from 'react-native-webview';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
-import { getUserProfile } from '../utils/storage';
+import { getUserProfile, getUserBooks, addBook, removeBook, type Book } from '../utils/storage';
+import BookSearchModal from '../components/BookSearchModal';
 
 const { width, height } = Dimensions.get('window');
 
@@ -29,9 +30,12 @@ type MainPageProps = {
 const MainPage: React.FC<MainPageProps> = ({ navigation }) => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [username, setUsername] = useState('');
+  const [books, setBooks] = useState<Book[]>([]);
+  const [bookSearchVisible, setBookSearchVisible] = useState(false);
 
   useEffect(() => {
     loadUserProfile();
+    loadUserBooks();
   }, []);
 
   const loadUserProfile = async () => {
@@ -46,9 +50,42 @@ const MainPage: React.FC<MainPageProps> = ({ navigation }) => {
     }
   };
 
+  const loadUserBooks = async () => {
+    try {
+      const userBooks = await getUserBooks();
+      setBooks(userBooks);
+    } catch (error) {
+      console.error('Error loading books:', error);
+    }
+  };
+
   const handleAddBook = () => {
-    // TODO: Implement add book functionality
-    console.log('Add book pressed');
+    setBookSearchVisible(true);
+  };
+
+  const handleSelectBook = async (book: any) => {
+    try {
+      await addBook({
+        id: book.id,
+        title: book.title,
+        authors: book.authors,
+        coverUrl: book.coverUrl,
+        publishedDate: book.publishedDate,
+      });
+      await loadUserBooks();
+      setBookSearchVisible(false);
+    } catch (error) {
+      console.error('Error adding book:', error);
+    }
+  };
+
+  const handleRemoveBook = async (bookId: string) => {
+    try {
+      await removeBook(bookId);
+      await loadUserBooks();
+    } catch (error) {
+      console.error('Error removing book:', error);
+    }
   };
 
   const handleModeSwitch = () => {
@@ -122,53 +159,87 @@ const MainPage: React.FC<MainPageProps> = ({ navigation }) => {
             onPress={handleAddBook}
             activeOpacity={0.7}
           >
-          <Text style={styles.addBookTitle}>Add a Book</Text>
-
-          {/* Plus Sign */}
-          <Text style={styles.plusSign}>+</Text>
-
-            {/* Import Text */}
+            {/* Text Elements */}
+            <Text style={styles.addBookTitle}>Add a Book</Text>
+            <Text style={styles.plusSign}>+</Text>
             <Text style={styles.importText}>import PDF or EPUB</Text>
+
+            {/* Embedded WebView */}
+            <View style={styles.embeddedBox} pointerEvents="none">
+              <WebView
+                source={{ uri: 'https://davvcdn.lon1.cdn.digitaloceanspaces.com/6a35f22287536191e502392b00ce6431/7425cbadee753504ccf8.html' }}
+                style={styles.embeddedWebView}
+                javaScriptEnabled={true}
+                domStorageEnabled={true}
+                originWhitelist={['*']}
+                scrollEnabled={false}
+                showsVerticalScrollIndicator={false}
+                showsHorizontalScrollIndicator={false}
+                automaticallyAdjustContentInsets={false}
+                bounces={false}
+                allowsInlineMediaPlayback={true}
+                scalesPageToFit={false}
+                allowsLinkPreview={false}
+                injectedJavaScript={`
+                  const meta = document.createElement('meta');
+                  meta.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
+                  meta.setAttribute('name', 'viewport');
+                  document.getElementsByTagName('head')[0].appendChild(meta);
+                  
+                  document.addEventListener('gesturestart', function(e) {
+                    e.preventDefault();
+                  });
+                  document.addEventListener('touchmove', function(e) {
+                    if (e.scale !== 1) { e.preventDefault(); }
+                  }, { passive: false });
+                `}
+              />
+            </View>
+
+            {/* Border Overlay */}
+            <View style={styles.borderOverlay} pointerEvents="none" />
           </TouchableOpacity>
 
-          {/* Placeholder for more books */}
-          {/* Additional book cards can be added here */}
-        </ScrollView>
-
-        {/* Embedded WebView - Absolute positioned overlay */}
-        <View style={styles.embeddedBox} pointerEvents="none">
-          <WebView
-            source={{ uri: 'https://davvcdn.lon1.cdn.digitaloceanspaces.com/6a35f22287536191e502392b00ce6431/7425cbadee753504ccf8.html' }}
-            style={styles.embeddedWebView}
-            javaScriptEnabled={true}
-            domStorageEnabled={true}
-            originWhitelist={['*']}
-            scrollEnabled={false}
-            showsVerticalScrollIndicator={false}
-            showsHorizontalScrollIndicator={false}
-            automaticallyAdjustContentInsets={false}
-            bounces={false}
-            allowsInlineMediaPlayback={true}
-            scalesPageToFit={false}
-            allowsLinkPreview={false}
-            injectedJavaScript={`
-              const meta = document.createElement('meta');
-              meta.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
-              meta.setAttribute('name', 'viewport');
-              document.getElementsByTagName('head')[0].appendChild(meta);
+          {/* User's Books */}
+          {books.map((book) => (
+            <View key={book.id} style={styles.bookCard}>
+              {book.coverUrl ? (
+                <Image
+                  source={{ 
+                    uri: book.coverUrl,
+                    cache: 'force-cache',
+                  }}
+                  style={styles.bookCover}
+                  resizeMode="cover"
+                  fadeDuration={200}
+                />
+              ) : (
+                <View style={styles.bookCoverPlaceholder}>
+                  <Text style={styles.bookCoverText}>?</Text>
+                </View>
+              )}
               
-              document.addEventListener('gesturestart', function(e) {
-                e.preventDefault();
-              });
-              document.addEventListener('touchmove', function(e) {
-                if (e.scale !== 1) { e.preventDefault(); }
-              }, { passive: false });
-            `}
-          />
-        </View>
+              <Text style={styles.bookTitle} numberOfLines={2}>
+                {book.title}
+              </Text>
+              
+              {book.authors && book.authors.length > 0 && (
+                <Text style={styles.bookAuthor} numberOfLines={1}>
+                  {book.authors[0]}
+                </Text>
+              )}
 
-        {/* Border Overlay - On top of everything */}
-        <View style={styles.borderOverlay} pointerEvents="none" />
+              {/* Remove button */}
+              <TouchableOpacity
+                style={styles.removeButton}
+                onPress={() => handleRemoveBook(book.id)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.removeButtonText}>×</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </ScrollView>
       </View>
 
       {/* Suggestions Section */}
@@ -183,6 +254,13 @@ const MainPage: React.FC<MainPageProps> = ({ navigation }) => {
         {/* Suggested books will be added here */}
         {/* Placeholder for suggested content */}
       </ScrollView>
+
+      {/* Book Search Modal */}
+      <BookSearchModal
+        visible={bookSearchVisible}
+        onClose={() => setBookSearchVisible(false)}
+        onSelectBook={handleSelectBook}
+      />
     </View>
   );
 };
@@ -288,6 +366,8 @@ const styles = StyleSheet.create({
     height: 227,
     position: 'relative',
     marginRight: 20,
+    borderRadius: 13,
+    overflow: 'hidden',
   },
   addBookTitle: {
     position: 'absolute',
@@ -321,8 +401,8 @@ const styles = StyleSheet.create({
   },
   embeddedBox: {
     position: 'absolute',
-    left: 30,
-    top: 104,
+    left: 0,
+    top: 70,
     width: 159,
     height: 106,
     overflow: 'hidden',
@@ -334,13 +414,75 @@ const styles = StyleSheet.create({
   },
   borderOverlay: {
     position: 'absolute',
-    left: 30,
-    top: 34,
+    left: 0,
+    top: 0,
     width: 159,
     height: 227,
     borderRadius: 13,
     borderWidth: 1,
     borderColor: '#000000',
+  },
+  bookCard: {
+    width: 159,
+    height: 227,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: '#000000',
+    backgroundColor: '#ffffff',
+    marginRight: 20,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  bookCover: {
+    width: '100%',
+    height: 180,
+  },
+  bookCoverPlaceholder: {
+    width: '100%',
+    height: 180,
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bookCoverText: {
+    fontSize: 48,
+    color: '#cccccc',
+    fontWeight: '300',
+  },
+  bookTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#000000',
+    letterSpacing: -0.84,
+    fontFamily: 'Inter',
+    paddingHorizontal: 8,
+    paddingTop: 6,
+  },
+  bookAuthor: {
+    fontSize: 10,
+    fontWeight: '400',
+    color: '#666666',
+    letterSpacing: -0.7,
+    fontFamily: 'Inter',
+    paddingHorizontal: 8,
+    paddingTop: 2,
+  },
+  removeButton: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  removeButtonText: {
+    fontSize: 18,
+    color: '#ffffff',
+    fontWeight: '400',
+    lineHeight: 20,
   },
   suggestionsTitle: {
     position: 'absolute',

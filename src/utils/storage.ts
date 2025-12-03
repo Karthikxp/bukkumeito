@@ -63,6 +63,7 @@ export class StorageService {
 export const STORAGE_KEYS = {
   USER_DATA: '@user_data',
   USER_PROFILE: '@user_profile',
+  USER_BOOKS: '@user_books',
   APP_SETTINGS: '@app_settings',
   THEME_PREFERENCE: '@theme_preference',
   ONBOARDING_COMPLETED: '@onboarding_completed',
@@ -141,6 +142,69 @@ export const updateUsername = async (username: string): Promise<void> => {
     }
   } catch (error) {
     console.error('Error updating username:', error);
+    throw error;
+  }
+};
+
+// Book interface
+export interface Book {
+  id: string;
+  title: string;
+  authors?: string[];
+  coverUrl?: string;
+  publishedDate?: string;
+  addedAt: string;
+}
+
+/**
+ * Save a book to user's collection
+ */
+export const addBook = async (book: Omit<Book, 'addedAt'>): Promise<void> => {
+  try {
+    const books = await getUserBooks();
+    const newBook: Book = {
+      ...book,
+      addedAt: new Date().toISOString(),
+    };
+    
+    // Check if book already exists
+    const existingIndex = books.findIndex(b => b.id === book.id);
+    if (existingIndex >= 0) {
+      books[existingIndex] = newBook;
+    } else {
+      books.unshift(newBook); // Add to beginning
+    }
+    
+    await StorageService.setItem(STORAGE_KEYS.USER_BOOKS, books);
+  } catch (error) {
+    console.error('Error adding book:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get all user books
+ */
+export const getUserBooks = async (): Promise<Book[]> => {
+  try {
+    const books = await StorageService.getItem<Book[]>(STORAGE_KEYS.USER_BOOKS);
+    return books || [];
+  } catch (error) {
+    console.error('Error getting books:', error);
+    return [];
+  }
+};
+
+/**
+ * Remove a book from user's collection
+ */
+export const removeBook = async (bookId: string): Promise<void> => {
+  try {
+    const books = await getUserBooks();
+    const filteredBooks = books.filter(book => book.id !== bookId);
+    await StorageService.setItem(STORAGE_KEYS.USER_BOOKS, filteredBooks);
+  } catch (error) {
+    console.error('Error removing book:', error);
     throw error;
   }
 };
