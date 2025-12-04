@@ -151,6 +151,7 @@ export interface Book {
   id: string;
   title: string;
   authors?: string[];
+  categories?: string[];
   coverUrl?: string;
   publishedDate?: string;
   addedAt: string;

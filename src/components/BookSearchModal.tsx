@@ -26,6 +26,7 @@ interface BookResult {
   id: string;
   title: string;
   authors?: string[];
+  categories?: string[];
   coverUrl?: string;
   publishedDate?: string;
 }
@@ -206,6 +207,7 @@ const BookSearchModal: React.FC<BookSearchModalProps> = ({
             id: item.id,
             title: volumeInfo.title || 'Unknown Title',
             authors: volumeInfo.authors || [],
+            categories: volumeInfo.categories || [],
             coverUrl,
             publishedDate: volumeInfo.publishedDate,
           };

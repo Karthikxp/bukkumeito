@@ -19,6 +19,7 @@ import { WebView } from 'react-native-webview';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 import { getUserProfile, getUserBooks, addBook, removeBook, type Book } from '../utils/storage';
+import { getRecommendations, type RecommendationBook } from '../utils/recommendations';
 import BookSearchModal from '../components/BookSearchModal';
 
 const { width, height } = Dimensions.get('window');
@@ -27,56 +28,11 @@ type MainPageProps = {
   navigation: StackNavigationProp<RootStackParamList, 'MainPage'>;
 };
 
-// Suggested books with high-quality covers
-const SUGGESTED_BOOKS = [
-  {
-    id: 'sugg-1',
-    title: '1984',
-    authors: ['George Orwell'],
-    coverUrl: 'https://books.google.com/books/publisher/content/images/frontcover/kotPYEqx7kMC?fife=w400-h600',
-    publishedDate: '1949',
-  },
-  {
-    id: 'sugg-2',
-    title: 'The Great Gatsby',
-    authors: ['F. Scott Fitzgerald'],
-    coverUrl: 'https://books.google.com/books/publisher/content/images/frontcover/iUv5AwAAQBAJ?fife=w400-h600',
-    publishedDate: '1925',
-  },
-  {
-    id: 'sugg-3',
-    title: 'To Kill a Mockingbird',
-    authors: ['Harper Lee'],
-    coverUrl: 'https://books.google.com/books/publisher/content/images/frontcover/PGR2AwAAQBAJ?fife=w400-h600',
-    publishedDate: '1960',
-  },
-  {
-    id: 'sugg-4',
-    title: 'Pride and Prejudice',
-    authors: ['Jane Austen'],
-    coverUrl: 'https://books.google.com/books/publisher/content/images/frontcover/s1gVAAAAYAAJ?fife=w400-h600',
-    publishedDate: '1813',
-  },
-  {
-    id: 'sugg-5',
-    title: 'Harry Potter and the Philosopher\'s Stone',
-    authors: ['J.K. Rowling'],
-    coverUrl: 'https://books.google.com/books/publisher/content/images/frontcover/wrOQLV6xB-wC?fife=w400-h600',
-    publishedDate: '1997',
-  },
-  {
-    id: 'sugg-6',
-    title: 'The Hobbit',
-    authors: ['J.R.R. Tolkien'],
-    coverUrl: 'https://books.google.com/books/publisher/content/images/frontcover/hFfhrCWiLSMC?fife=w400-h600',
-    publishedDate: '1937',
-  },
-];
-
 const MainPage: React.FC<MainPageProps> = ({ navigation }) => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [username, setUsername] = useState('');
   const [books, setBooks] = useState<Book[]>([]);
+  const [suggestedBooks, setSuggestedBooks] = useState<RecommendationBook[]>([]);
   const [bookSearchVisible, setBookSearchVisible] = useState(false);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
@@ -84,6 +40,12 @@ const MainPage: React.FC<MainPageProps> = ({ navigation }) => {
     loadUserProfile();
     loadUserBooks();
   }, []);
+
+  // Update suggestions whenever books change
+  useEffect(() => {
+    const suggestions = getRecommendations(books);
+    setSuggestedBooks(suggestions);
+  }, [books]);
 
   const loadUserProfile = async () => {
     try {
@@ -116,6 +78,7 @@ const MainPage: React.FC<MainPageProps> = ({ navigation }) => {
         id: book.id,
         title: book.title,
         authors: book.authors,
+        categories: book.categories,
         coverUrl: book.coverUrl,
         publishedDate: book.publishedDate,
       });
@@ -304,21 +267,22 @@ const MainPage: React.FC<MainPageProps> = ({ navigation }) => {
         style={styles.suggestedFrame}
         contentContainerStyle={styles.suggestedFrameContent}
       >
-        {SUGGESTED_BOOKS.map((book) => (
-          <TouchableOpacity
-            key={book.id}
-            style={styles.suggestionCard}
-            onPress={async () => {
-              try {
-                await addBook(book);
-                await loadUserBooks();
-              } catch (error) {
-                console.error('Error adding suggested book:', error);
-              }
-            }}
-            activeOpacity={0.7}
-          >
-            {book.coverUrl && !imageErrors.has(book.id) ? (
+        {suggestedBooks
+          .filter(book => book.coverUrl && !imageErrors.has(book.id))
+          .map((book) => (
+            <TouchableOpacity
+              key={book.id}
+              style={styles.suggestionCard}
+              onPress={async () => {
+                try {
+                  await addBook(book);
+                  await loadUserBooks();
+                } catch (error) {
+                  console.error('Error adding suggested book:', error);
+                }
+              }}
+              activeOpacity={0.7}
+            >
               <Image
                 source={{ 
                   uri: book.coverUrl,
@@ -332,23 +296,18 @@ const MainPage: React.FC<MainPageProps> = ({ navigation }) => {
                   setImageErrors(prev => new Set(prev).add(book.id));
                 }}
               />
-            ) : (
-              <View style={styles.suggestionCoverPlaceholder}>
-                <Text style={styles.bookCoverText}>?</Text>
-              </View>
-            )}
-            
-            <Text style={styles.suggestionTitle} numberOfLines={2}>
-              {book.title}
-            </Text>
-            
-            {book.authors && book.authors.length > 0 && (
-              <Text style={styles.suggestionAuthor} numberOfLines={1}>
-                {book.authors[0]}
+              
+              <Text style={styles.suggestionTitle} numberOfLines={2}>
+                {book.title}
               </Text>
-            )}
-          </TouchableOpacity>
-        ))}
+              
+              {book.authors && book.authors.length > 0 && (
+                <Text style={styles.suggestionAuthor} numberOfLines={1}>
+                  {book.authors[0]}
+                </Text>
+              )}
+            </TouchableOpacity>
+          ))}
       </ScrollView>
 
       {/* Book Search Modal */}
