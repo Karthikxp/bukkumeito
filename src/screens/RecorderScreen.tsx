@@ -241,8 +241,7 @@ const RecorderScreen: React.FC<RecorderScreenProps> = ({ navigation, route }) =>
           onPress={handleBack}
           activeOpacity={0.7}
         >
-          
-          <Text style={styles.myNotesTitle}> ‹ My Notes</Text>
+          <Text style={styles.myNotesTitle}> ~ My Notes</Text>
         </TouchableOpacity>
 
         {/* Book Dropdown */}
@@ -465,7 +464,7 @@ const styles = StyleSheet.create({
   },
   shareEntryButton: {
     position: 'absolute',
-    right: -10,
+    right: 5,
     top: height * 0.1429 + 50.29,
   },
   shareEntryText: {
@@ -474,6 +473,7 @@ const styles = StyleSheet.create({
     color: '#000000',
     letterSpacing: -0.9058,
     fontFamily: 'Inter',
+    textDecorationLine: 'underline',
     width: 94,
   },
   dateText: {
