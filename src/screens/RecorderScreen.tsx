@@ -232,6 +232,7 @@ const RecorderScreen: React.FC<RecorderScreenProps> = ({ navigation, route }) =>
             style={styles.profilePicture}
             resizeMode="cover"
           />
+          <View style={styles.profileBorderOverlay} pointerEvents="none" />
         </View>
 
         {/* Back Button with My Notes */}
@@ -368,7 +369,7 @@ const styles = StyleSheet.create({
   },
   logoSmallContainer: {
     position: 'absolute',
-    left: width * 0.0833,
+    left: 30,
     top: 32,
     width: 36.189,
     height: 36.653,
@@ -379,7 +380,7 @@ const styles = StyleSheet.create({
   },
   title: {
     position: 'absolute',
-    left: width * 0.4167,
+    right: 30,
     top: 24,
     fontSize: 34.435,
     fontWeight: '700',
@@ -389,7 +390,7 @@ const styles = StyleSheet.create({
   },
   profilePictureContainer: {
     position: 'absolute',
-    left: width * 0.75 + 3,
+    right: 30,
     top: height * 0.0714 + 30.64,
     width: 57,
     height: 57,
@@ -400,9 +401,19 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  profileBorderOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    borderRadius: 28.5,
+    borderWidth: 0.32,
+    borderColor: '#000000',
+  },
   backButton: {
     position: 'absolute',
-    left: 11,
+    left: 30,
     top: height * 0.0714 + 39.64,
     flexDirection: 'row',
     alignItems: 'center',
@@ -423,7 +434,7 @@ const styles = StyleSheet.create({
   },
   bookDropdownContainer: {
     position: 'absolute',
-    left: width * 0.0833,
+    left: 30,
     top: height * 0.1429 + 29.29,
   },
   bookDropdownButton: {
@@ -454,7 +465,7 @@ const styles = StyleSheet.create({
   },
   shareEntryButton: {
     position: 'absolute',
-    left: width * 0.6667 + 27,
+    right: -10,
     top: height * 0.1429 + 50.29,
   },
   shareEntryText: {

@@ -13,3 +13,5 @@ echo "========================================="
 
 # Start Expo with tunnel mode
 npx expo start --tunnel --clear
+
+
