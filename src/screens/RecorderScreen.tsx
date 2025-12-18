@@ -609,20 +609,20 @@ const styles = StyleSheet.create({
   },
   notesInput: {
     position: 'absolute',
-    left: 29,
+    left: 30,
     top: height * 0.3571 + 16.21,
-    width: 300,
+    width: width - 60, // 30px margin on left and right
     minHeight: 400,
-    fontSize: 12.959,
-    fontWeight: '500',
+    fontSize: 19.96,
+    fontWeight: '700',
     color: '#000000',
-    letterSpacing: -0.5988,
     fontFamily: 'Inter',
-    lineHeight: 28,
+    lineHeight: 32,
+    flexWrap: 'wrap',
   },
   signatureContainer: {
     position: 'absolute',
-    right: 30,
+    right: 5, // Aligned with Share Entry button
     top: height * 0.3571 + 410,
     width: 120,
     height: 80,

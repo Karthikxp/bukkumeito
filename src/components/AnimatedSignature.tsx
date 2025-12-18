@@ -55,14 +55,6 @@ const AnimatedSignature: React.FC<AnimatedSignatureProps> = ({
           {
             width,
             height,
-            transform: [
-              {
-                translateX: animationProgress.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [-width * 0.2, 0],
-                }),
-              },
-            ],
           },
         ]}
         resizeMode="contain"
