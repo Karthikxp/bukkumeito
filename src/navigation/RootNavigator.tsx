@@ -4,7 +4,8 @@
  * @format
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { BackHandler } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
@@ -31,12 +32,26 @@ export type RootStackParamList = {
 const Stack = createStackNavigator<RootStackParamList>();
 
 const RootNavigator = () => {
+  useEffect(() => {
+    const backAction = () => {
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction,
+    );
+
+    return () => backHandler.remove();
+  }, []);
+
   return (
     <NavigationContainer>
       <Stack.Navigator 
         initialRouteName="Intro"
         screenOptions={{ 
           headerShown: false,
+          gestureEnabled: false,
         }}
       >
         <Stack.Screen 

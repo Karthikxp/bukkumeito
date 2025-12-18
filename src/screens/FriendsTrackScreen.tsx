@@ -56,7 +56,7 @@ const friendsData: Friend[] = [
   },
   {
     id: 3,
-    name: 'Rohan',
+    name: 'Alexander',//centered text in the middle of the card with text-align: center
     profileImage: require('../../Asset/ui/rohan_right.png'),
     currentlyReading: {
       bookCover: require('../../Asset/ui/image_3.png'),
@@ -318,14 +318,16 @@ const styles = StyleSheet.create({
   },
   cardName: {
     position: 'absolute',
-    left: 117,
+
     top: 18,
     fontSize: 20,
     fontWeight: '700',
     color: '#ffffff',
     letterSpacing: -1.4,
     fontFamily: 'Inter',
-    textAlign: 'right',
+    textAlign: 'center',
+    alignSelf: 'center',
+    
   },
   profileImageContainer: {
     position: 'absolute',
