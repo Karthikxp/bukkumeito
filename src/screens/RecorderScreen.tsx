@@ -18,6 +18,7 @@ import {
   Platform,
   Modal,
   FlatList,
+  Animated,
 } from 'react-native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RouteProp } from '@react-navigation/native';
@@ -25,6 +26,7 @@ import type { RootStackParamList } from '../navigation/RootNavigator';
 import { getUserProfile, getUserBooks, type Book } from '../utils/storage';
 import { saveNote, getLatestNoteForBook } from '../utils/notes';
 import { Note } from '../types/Note';
+import { getSignatureImageSource } from '../utils/signature';
 
 const { width, height } = Dimensions.get('window');
 
@@ -45,13 +47,19 @@ const RecorderScreen: React.FC<RecorderScreenProps> = ({ navigation, route }) =>
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [userBooks, setUserBooks] = useState<Book[]>([]);
   const [showBookDropdown, setShowBookDropdown] = useState(false);
+  const [signatureUri, setSignatureUri] = useState<string | null>(null);
+  const [isSignatureStamped, setIsSignatureStamped] = useState(false);
   
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const signatureOpacity = useRef(new Animated.Value(0.3)).current; // Increased from 0.1 to 0.3 for better visibility
+  const signatureScale = useRef(new Animated.Value(1)).current;
+  const signatureRotation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     loadUserProfile();
     loadUserBooks();
     updateDateTime();
+    loadSignature();
   }, []);
 
   useEffect(() => {
@@ -70,6 +78,21 @@ const RecorderScreen: React.FC<RecorderScreenProps> = ({ navigation, route }) =>
       }
     } catch (error) {
       console.error('Error loading user profile:', error);
+    }
+  };
+
+  const loadSignature = async () => {
+    try {
+      const signatureSource = await getSignatureImageSource();
+      console.log('Signature source:', signatureSource);
+      if (signatureSource?.uri) {
+        setSignatureUri(signatureSource.uri);
+        console.log('Signature loaded successfully');
+      } else {
+        console.log('No signature found in storage');
+      }
+    } catch (error) {
+      console.error('Error loading signature:', error);
     }
   };
 
@@ -193,6 +216,54 @@ const RecorderScreen: React.FC<RecorderScreenProps> = ({ navigation, route }) =>
     console.log('Share entry pressed');
   };
 
+  const handleSignaturePress = () => {
+    if (isSignatureStamped) return; // Already stamped
+    
+    setIsSignatureStamped(true);
+    
+    // Stamp animation sequence: scale up, rotate slightly, then settle
+    Animated.sequence([
+      // Quick stamp down
+      Animated.parallel([
+        Animated.timing(signatureScale, {
+          toValue: 1.2,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(signatureRotation, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(signatureOpacity, {
+          toValue: 0.8,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]),
+      // Settle and full opacity
+      Animated.parallel([
+        Animated.spring(signatureScale, {
+          toValue: 1,
+          friction: 3,
+          tension: 40,
+          useNativeDriver: true,
+        }),
+        Animated.spring(signatureRotation, {
+          toValue: 0,
+          friction: 3,
+          tension: 40,
+          useNativeDriver: true,
+        }),
+        Animated.timing(signatureOpacity, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+  };
+
   // Get full title
   const getDisplayTitle = () => {
     if (!selectedBook) return 'Select Book';
@@ -290,6 +361,42 @@ const RecorderScreen: React.FC<RecorderScreenProps> = ({ navigation, route }) =>
           autoCapitalize="sentences"
         />
 
+        {/* Animated Signature Stamp */}
+        {signatureUri ? (
+          <TouchableOpacity
+            style={styles.signatureContainer}
+            onPress={handleSignaturePress}
+            activeOpacity={1}
+            disabled={isSignatureStamped}
+          >
+            <Animated.View
+              style={{
+                opacity: signatureOpacity,
+                transform: [
+                  { scale: signatureScale },
+                  {
+                    rotate: signatureRotation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0deg', '-5deg'],
+                    }),
+                  },
+                ],
+              }}
+            >
+              <Image
+                source={{ uri: signatureUri }}
+                style={styles.signatureImage}
+                resizeMode="contain"
+              />
+            </Animated.View>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.signatureContainer}>
+            <Text style={styles.signaturePlaceholder}>
+              [Tap to sign]
+            </Text>
+          </View>
+        )}
         
       </ScrollView>
 
@@ -510,16 +617,25 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter',
     lineHeight: 28,
   },
-  signature: {
+  signatureContainer: {
     position: 'absolute',
-    left: width * 0.6667 + 28,
-    top: height * 0.8571 + 35.71,
-    fontSize: 41.403,
-    fontWeight: '400',
-    color: '#000000',
-    letterSpacing: -2.8982,
-    fontFamily: 'Boska-Regular',
-    transform: [{ rotate: '-9.855deg' }],
+    right: 30,
+    top: height * 0.3571 + 410,
+    width: 120,
+    height: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  signatureImage: {
+    width: 120,
+    height: 80,
+  },
+  signaturePlaceholder: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#999999',
+    fontFamily: 'Inter',
+    fontStyle: 'italic',
   },
   // Modal Styles
   modalOverlay: {
