@@ -27,6 +27,7 @@ import { getUserProfile, getUserBooks, type Book } from '../utils/storage';
 import { saveNote, getLatestNoteForBook } from '../utils/notes';
 import { Note } from '../types/Note';
 import { getSignatureImageSource } from '../utils/signature';
+import AnimatedSignature from '../components/AnimatedSignature';
 
 const { width, height } = Dimensions.get('window');
 
@@ -49,6 +50,7 @@ const RecorderScreen: React.FC<RecorderScreenProps> = ({ navigation, route }) =>
   const [showBookDropdown, setShowBookDropdown] = useState(false);
   const [signatureUri, setSignatureUri] = useState<string | null>(null);
   const [isSignatureStamped, setIsSignatureStamped] = useState(false);
+  const [isSignatureAnimating, setIsSignatureAnimating] = useState(false);
   
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const signatureOpacity = useRef(new Animated.Value(0.3)).current; // Increased from 0.1 to 0.3 for better visibility
@@ -217,50 +219,49 @@ const RecorderScreen: React.FC<RecorderScreenProps> = ({ navigation, route }) =>
   };
 
   const handleSignaturePress = () => {
-    if (isSignatureStamped) return; // Already stamped
+    if (isSignatureStamped || isSignatureAnimating) return; // Already stamped or animating
     
+    // Start the drawing animation
+    setIsSignatureAnimating(true);
+    
+    // Initial stamp effect
+    Animated.parallel([
+      Animated.timing(signatureScale, {
+        toValue: 1.1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(signatureRotation, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(signatureOpacity, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const handleAnimationComplete = () => {
     setIsSignatureStamped(true);
+    setIsSignatureAnimating(false);
     
-    // Stamp animation sequence: scale up, rotate slightly, then settle
-    Animated.sequence([
-      // Quick stamp down
-      Animated.parallel([
-        Animated.timing(signatureScale, {
-          toValue: 1.2,
-          duration: 150,
-          useNativeDriver: true,
-        }),
-        Animated.timing(signatureRotation, {
-          toValue: 1,
-          duration: 150,
-          useNativeDriver: true,
-        }),
-        Animated.timing(signatureOpacity, {
-          toValue: 0.8,
-          duration: 150,
-          useNativeDriver: true,
-        }),
-      ]),
-      // Settle and full opacity
-      Animated.parallel([
-        Animated.spring(signatureScale, {
-          toValue: 1,
-          friction: 3,
-          tension: 40,
-          useNativeDriver: true,
-        }),
-        Animated.spring(signatureRotation, {
-          toValue: 0,
-          friction: 3,
-          tension: 40,
-          useNativeDriver: true,
-        }),
-        Animated.timing(signatureOpacity, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]),
+    // Settle animation
+    Animated.parallel([
+      Animated.spring(signatureScale, {
+        toValue: 1,
+        friction: 3,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+      Animated.spring(signatureRotation, {
+        toValue: 0,
+        friction: 3,
+        tension: 40,
+        useNativeDriver: true,
+      }),
     ]).start();
   };
 
@@ -367,7 +368,7 @@ const RecorderScreen: React.FC<RecorderScreenProps> = ({ navigation, route }) =>
             style={styles.signatureContainer}
             onPress={handleSignaturePress}
             activeOpacity={1}
-            disabled={isSignatureStamped}
+            disabled={isSignatureStamped || isSignatureAnimating}
           >
             <Animated.View
               style={{
@@ -383,10 +384,12 @@ const RecorderScreen: React.FC<RecorderScreenProps> = ({ navigation, route }) =>
                 ],
               }}
             >
-              <Image
-                source={{ uri: signatureUri }}
-                style={styles.signatureImage}
-                resizeMode="contain"
+              <AnimatedSignature
+                signatureUri={signatureUri}
+                width={120}
+                height={80}
+                isAnimating={isSignatureAnimating}
+                onAnimationComplete={handleAnimationComplete}
               />
             </Animated.View>
           </TouchableOpacity>

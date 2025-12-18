@@ -10,6 +10,8 @@ import { StorageService, STORAGE_KEYS } from './storage';
 
 export interface SignatureData {
   base64: string; // Base64 encoded PNG with data URI prefix
+  svgPath?: string; // SVG path data for drawing animation
+  pathLength?: number; // Total length of the SVG path for animation
   lastUpdated: string; // When the signature was last saved/updated
 }
 
@@ -64,11 +66,19 @@ export const hasUserSignature = async (): Promise<boolean> => {
  * Save or update user signature
  * NOTE: This will REPLACE any existing signature
  * @param base64Signature - Base64 encoded PNG signature
+ * @param svgPath - Optional SVG path data for animation
+ * @param pathLength - Optional total length of the SVG path
  */
-export const saveUserSignature = async (base64Signature: string): Promise<void> => {
+export const saveUserSignature = async (
+  base64Signature: string,
+  svgPath?: string,
+  pathLength?: number
+): Promise<void> => {
   try {
     const signatureData: SignatureData = {
       base64: base64Signature,
+      svgPath,
+      pathLength,
       lastUpdated: new Date().toISOString(),
     };
     
@@ -77,6 +87,26 @@ export const saveUserSignature = async (base64Signature: string): Promise<void> 
   } catch (error) {
     console.error('Error saving signature:', error);
     throw error;
+  }
+};
+
+/**
+ * Get SVG path data for signature animation
+ * @returns SVG path string and length, or null if not available
+ */
+export const getSignatureSVGPath = async (): Promise<{ path: string; length: number } | null> => {
+  try {
+    const signatureData = await getUserSignature();
+    if (signatureData?.svgPath && signatureData?.pathLength) {
+      return {
+        path: signatureData.svgPath,
+        length: signatureData.pathLength,
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting signature SVG path:', error);
+    return null;
   }
 };
 
